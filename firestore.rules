@@ -24,15 +24,16 @@ service cloud.firestore {
 
     // Trainings Collection
     match /trainings/{trainingId} {
-      allow read: if true; // Public read so participants can load course details when submitting evaluation
-      allow create, update, delete: if true; // In development/prototype allow seamless updates, protected in production
+      allow read, write: if true;
+    }
+
+    match /training_actions/{trainingId} {
+      allow read, write: if true;
     }
 
     // Evaluations Collection
     match /evaluations/{evaluationId} {
-      allow read: if true;
-      allow create: if true; // Allow participants to submit their completed questionnaire
-      allow update, delete: if true;
+      allow read, write: if true;
     }
 
     // Followups Collection
@@ -47,6 +48,15 @@ service cloud.firestore {
 
     // Settings Collection
     match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    match /company_settings/{settingId} {
+      allow read, write: if true;
+    }
+    
+    // Metadata/Status Collections
+    match /app_meta/{metaId} {
       allow read, write: if true;
     }
   }

@@ -26,34 +26,45 @@ const LOCAL_STORAGE_KEYS = {
   EVALUATIONS: 'iso_evaluations_data',
   FOLLOWUPS: 'iso_followups_data',
   SETTINGS: 'iso_company_settings',
+  INITIALIZED: 'iso_app_initialized_v2',
 };
 
 export class AppStorage {
   // 1. Fetch Training Actions
   static async getTrainingActions(): Promise<TrainingAction[]> {
     let list: TrainingAction[] = [];
+    let fetchedFromFirestore = false;
     try {
       const snap = await getDocs(collection(db, 'training_actions'));
+      fetchedFromFirestore = true;
       if (!snap.empty) {
         snap.forEach((d) => {
           list.push({ ...d.data(), id: d.id } as TrainingAction);
         });
       }
     } catch (e) {
-      console.warn('Firestore fetch failed or empty, using cached/initial data:', e);
+      console.warn('Firestore fetch failed, checking local cache:', e);
     }
 
-    if (list.length === 0) {
+    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
+
+    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.TRAININGS);
-      if (local) {
+      if (local !== null) {
         try {
           list = JSON.parse(local);
         } catch {}
+      } else if (!isInitializedLocally) {
+        // First run ever: seed demo data
+        list = INITIAL_TRAINING_ACTIONS;
+        localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
+        // Push initial to firestore if online
+        for (const t of INITIAL_TRAINING_ACTIONS) {
+          setDoc(doc(db, 'training_actions', t.id), t).catch(() => {});
+        }
       }
-    }
-
-    if (list.length === 0) {
-      list = INITIAL_TRAINING_ACTIONS;
+    } else {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     }
 
     // Auto-migrate legacy FOR-2026-XX codes and sync attendees counts
@@ -99,6 +110,7 @@ export class AppStorage {
     } else {
       updated = [toSave, ...current];
     }
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.TRAININGS, JSON.stringify(updated));
     return toSave;
   }
@@ -112,40 +124,44 @@ export class AppStorage {
     }
     const current = await this.getTrainingActions();
     const updated = current.filter((item) => item.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.TRAININGS, JSON.stringify(updated));
   }
 
   // 4. Fetch Evaluations
   static async getEvaluations(): Promise<Evaluation[]> {
-    let firestoreList: Evaluation[] = [];
+    let list: Evaluation[] = [];
+    let fetchedFromFirestore = false;
     try {
       const snap = await getDocs(collection(db, 'evaluations'));
+      fetchedFromFirestore = true;
       if (!snap.empty) {
         snap.forEach((d) => {
-          firestoreList.push({ ...d.data(), id: d.id } as Evaluation);
+          list.push({ ...d.data(), id: d.id } as Evaluation);
         });
       }
     } catch (e) {
       console.warn('Firestore evaluations fetch error:', e);
     }
 
-    let localList: Evaluation[] = [];
-    const local = localStorage.getItem(LOCAL_STORAGE_KEYS.EVALUATIONS);
-    if (local) {
-      try {
-        localList = JSON.parse(local);
-      } catch {}
+    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
+
+    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
+      const local = localStorage.getItem(LOCAL_STORAGE_KEYS.EVALUATIONS);
+      if (local !== null) {
+        try {
+          list = JSON.parse(local);
+        } catch {}
+      } else if (!isInitializedLocally) {
+        list = INITIAL_EVALUATIONS;
+        for (const e of INITIAL_EVALUATIONS) {
+          setDoc(doc(db, 'evaluations', e.id), e).catch(() => {});
+        }
+      }
     }
 
-    // Merge map by ID so that no evaluations from different courses are lost
-    const evalMap = new Map<string, Evaluation>();
-    INITIAL_EVALUATIONS.forEach((e) => evalMap.set(e.id, e));
-    localList.forEach((e) => evalMap.set(e.id, e));
-    firestoreList.forEach((e) => evalMap.set(e.id, e));
-
-    const merged = Array.from(evalMap.values());
-    localStorage.setItem(LOCAL_STORAGE_KEYS.EVALUATIONS, JSON.stringify(merged));
-    return merged;
+    localStorage.setItem(LOCAL_STORAGE_KEYS.EVALUATIONS, JSON.stringify(list));
+    return list;
   }
 
   // 5. Add New Evaluation (Recalculates training average satisfaction & count)
@@ -257,6 +273,7 @@ export class AppStorage {
     const allEvals = await this.getEvaluations();
     const targetEval = allEvals.find(e => e.id === id);
     const updatedEvals = allEvals.filter(e => e.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.EVALUATIONS, JSON.stringify(updatedEvals));
 
     // Recalculate training score if necessary
@@ -292,27 +309,38 @@ export class AppStorage {
 
   // 6. Fetch Followups
   static async getFollowups(): Promise<EffectivenessFollowup[]> {
+    let list: EffectivenessFollowup[] = [];
+    let fetchedFromFirestore = false;
     try {
       const snap = await getDocs(collection(db, 'followups'));
+      fetchedFromFirestore = true;
       if (!snap.empty) {
-        const list: EffectivenessFollowup[] = [];
         snap.forEach((d) => {
           list.push({ ...d.data(), id: d.id } as EffectivenessFollowup);
         });
-        localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(list));
-        return list;
       }
-    } catch (e) {}
-
-    const local = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
-    if (local) {
-      try {
-        return JSON.parse(local);
-      } catch {}
+    } catch (e) {
+      console.warn('Firestore followups fetch error:', e);
     }
 
-    localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(INITIAL_FOLLOWUPS));
-    return INITIAL_FOLLOWUPS;
+    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
+
+    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
+      const local = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
+      if (local !== null) {
+        try {
+          list = JSON.parse(local);
+        } catch {}
+      } else if (!isInitializedLocally) {
+        list = INITIAL_FOLLOWUPS;
+        for (const f of INITIAL_FOLLOWUPS) {
+          setDoc(doc(db, 'followups', f.id), f).catch(() => {});
+        }
+      }
+    }
+
+    localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(list));
+    return list;
   }
 
   // 7. Save Followup
@@ -335,9 +363,6 @@ export class AppStorage {
         currentLocal = JSON.parse(rawLocal);
       } catch {}
     }
-    if (currentLocal.length === 0) {
-      currentLocal = INITIAL_FOLLOWUPS;
-    }
 
     const index = currentLocal.findIndex((f) => f.id === id);
     let updated: EffectivenessFollowup[];
@@ -347,6 +372,7 @@ export class AppStorage {
     } else {
       updated = [toSave, ...currentLocal];
     }
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(updated));
 
     // 2. Persist to Firestore with sanitized object
@@ -371,6 +397,7 @@ export class AppStorage {
       } catch {}
     }
     const updated = currentLocal.filter((f) => f.id !== id);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(updated));
 
     // 2. Delete from Firestore
@@ -408,22 +435,24 @@ export class AppStorage {
     const mergedSettings: CompanySettings = {
       ...INITIAL_SETTINGS,
       ...settings,
-      adminEmail: (!settings.adminEmail || settings.adminEmail.toLowerCase() === 'codiagrooscar@gmail.com')
-        ? 'alma.trilles@codiagro.com'
+      adminEmail: (settings.adminEmail === 'alma.trilles@codiagro.com' || settings.adminEmail === 'codiagrooscar@gmail.com' || !settings.adminEmail)
+        ? 'formacioncodiagro@gmail.com'
         : settings.adminEmail,
-      smtpUser: (!settings.smtpUser || settings.smtpUser.toLowerCase() === 'codiagrooscar@gmail.com')
-        ? 'alma.trilles@codiagro.com'
+      smtpUser: (settings.smtpUser === 'alma.trilles@codiagro.com' || settings.smtpUser === 'codiagrooscar@gmail.com' || !settings.smtpUser)
+        ? 'formacioncodiagro@gmail.com'
         : settings.smtpUser,
-      smtpHost: (!settings.smtpHost || settings.smtpHost === 'smtp.gmail.com')
-        ? 'smtp.office365.com'
+      smtpHost: (settings.smtpHost === 'smtp.office365.com' || !settings.smtpHost)
+        ? 'smtp.gmail.com'
         : settings.smtpHost,
-      smtpPort: (!settings.smtpPort || settings.smtpPort === 465)
-        ? 587
+      smtpPort: (settings.smtpPort === 587 || !settings.smtpPort)
+        ? 465
         : settings.smtpPort,
+      smtpPass: (settings.smtpPass === '1Ujhg23n' || !settings.smtpPass) ? '' : settings.smtpPass,
       documentCode: settings.documentCode || 'RE0180104',
       documentEdition: settings.documentEdition || '07',
       companyName: settings.companyName || 'CODIAGRO S.A.',
       authorizedAdminEmails: Array.from(new Set([
+        'formacioncodiagro@gmail.com',
         'alma.trilles@codiagro.com',
         ...(settings.authorizedAdminEmails || []),
         'codiagrooscar@gmail.com'

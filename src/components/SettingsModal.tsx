@@ -62,10 +62,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   
   const sanitizeSettings = (raw: CompanySettings): CompanySettings => ({
     ...raw,
-    adminEmail: (!raw.adminEmail || raw.adminEmail.toLowerCase() === 'codiagrooscar@gmail.com') ? 'alma.trilles@codiagro.com' : raw.adminEmail,
-    smtpUser: (!raw.smtpUser || raw.smtpUser.toLowerCase() === 'codiagrooscar@gmail.com') ? 'alma.trilles@codiagro.com' : raw.smtpUser,
-    smtpHost: (!raw.smtpHost || raw.smtpHost === 'smtp.gmail.com') ? 'smtp.office365.com' : raw.smtpHost,
-    smtpPort: (!raw.smtpPort || raw.smtpPort === 465) ? 587 : raw.smtpPort,
+    adminEmail: (raw.adminEmail === 'alma.trilles@codiagro.com' || raw.adminEmail === 'codiagrooscar@gmail.com' || !raw.adminEmail) ? 'formacioncodiagro@gmail.com' : raw.adminEmail,
+    smtpUser: (raw.smtpUser === 'alma.trilles@codiagro.com' || raw.smtpUser === 'codiagrooscar@gmail.com' || !raw.smtpUser) ? 'formacioncodiagro@gmail.com' : raw.smtpUser,
+    smtpHost: (raw.smtpHost === 'smtp.office365.com' || !raw.smtpHost) ? 'smtp.gmail.com' : raw.smtpHost,
+    smtpPort: (raw.smtpPort === 587 || !raw.smtpPort) ? 465 : raw.smtpPort,
+    smtpPass: (raw.smtpPass === '1Ujhg23n' || !raw.smtpPass) ? '' : raw.smtpPass,
     emailNotificationEnabled: raw.emailNotificationEnabled ?? true,
     pushNotificationEnabled: raw.pushNotificationEnabled ?? true,
     dailyPendingDigestEnabled: raw.dailyPendingDigestEnabled ?? true,
@@ -86,6 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     trainingCenters: raw.trainingCenters && raw.trainingCenters.length > 0 ? raw.trainingCenters : INITIAL_TRAINING_CENTERS,
     logoUrl: raw.logoUrl || localStorage.getItem('codiagro_logo_url') || '/logo.png',
     authorizedAdminEmails: Array.from(new Set([
+      'formacioncodiagro@gmail.com',
       'alma.trilles@codiagro.com',
       ...(raw.authorizedAdminEmails || []),
       'codiagrooscar@gmail.com'
@@ -145,11 +147,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          targetEmail: formData.adminEmail || 'alma.trilles@codiagro.com',
+          targetEmail: formData.adminEmail || 'formacioncodiagro@gmail.com',
           smtpConfig: {
-            host: formData.smtpHost || 'smtp.office365.com',
-            port: formData.smtpPort || 587,
-            user: formData.smtpUser || formData.adminEmail || 'alma.trilles@codiagro.com',
+            host: formData.smtpHost || 'smtp.gmail.com',
+            port: formData.smtpPort || 465,
+            user: formData.smtpUser || formData.adminEmail || 'formacioncodiagro@gmail.com',
             pass: formData.smtpPass
           }
         }),
@@ -1345,7 +1347,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>Servidor de Envío de Correos (Outlook / Office 365 / Gmail / SMTP)</span>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-mono">Remitente: {formData.smtpUser || formData.adminEmail || 'alma.trilles@codiagro.com'}</span>
+                  <span className="text-[11px] text-slate-400 font-mono">Remitente: {formData.smtpUser || formData.adminEmail || 'formacioncodiagro@gmail.com'}</span>
                 </div>
 
                 <p className="text-xs text-slate-300">
@@ -1360,9 +1362,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={formData.smtpHost || 'smtp.office365.com'}
+                      value={formData.smtpHost || 'smtp.gmail.com'}
                       onChange={(e) => setFormData({ ...formData, smtpHost: e.target.value })}
-                      placeholder="smtp.office365.com"
+                      placeholder="smtp.gmail.com"
                       className="w-full bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     />
                   </div>
@@ -1373,22 +1375,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={formData.smtpPort || 587}
+                      value={formData.smtpPort || 465}
                       onChange={(e) => setFormData({ ...formData, smtpPort: Number(e.target.value) })}
-                      placeholder="587"
+                      placeholder="465"
                       className="w-full bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Usuario Remitente (Outlook / Microsoft 365)
+                      Usuario Remitente (Gmail / Outlook / SMTP)
                     </label>
                     <input
                       type="email"
-                      value={formData.smtpUser || formData.adminEmail || 'alma.trilles@codiagro.com'}
+                      value={formData.smtpUser || formData.adminEmail || 'formacioncodiagro@gmail.com'}
                       onChange={(e) => setFormData({ ...formData, smtpUser: e.target.value })}
-                      placeholder="alma.trilles@codiagro.com"
+                      placeholder="formacioncodiagro@gmail.com"
                       className="w-full bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     />
                   </div>
@@ -1413,7 +1415,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div>
                       <p className="text-xs text-slate-200 font-semibold">Prueba de Envío en Tiempo Real</p>
                       <p className="text-[11px] text-slate-400">
-                        Envía un correo de comprobación a <span className="font-mono text-emerald-300">{formData.adminEmail || 'alma.trilles@codiagro.com'}</span> para verificar la conexión.
+                        Envía un correo de comprobación a <span className="font-mono text-emerald-300">{formData.adminEmail || 'formacioncodiagro@gmail.com'}</span> para verificar la conexión.
                       </p>
                     </div>
 
@@ -1487,7 +1489,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex items-center gap-2 bg-[#101C2E] p-2.5 rounded-xl border border-[#1A2B44]">
                   <input
                     type="email"
-                    placeholder="Añadir nuevo correo de administrador (ej: alma.trilles@codiagro.com)..."
+                    placeholder="Añadir nuevo correo de administrador (ej: formacioncodiagro@gmail.com)..."
                     value={newAdminEmailInput}
                     onChange={(e) => setNewAdminEmailInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -1510,7 +1512,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* List of Authorized Admin Emails */}
                 <div className="space-y-1.5">
-                  {(formData.authorizedAdminEmails || ['alma.trilles@codiagro.com', 'codiagrooscar@gmail.com']).map((email, idx) => (
+                  {(formData.authorizedAdminEmails || ['formacioncodiagro@gmail.com', 'alma.trilles@codiagro.com', 'codiagrooscar@gmail.com']).map((email, idx) => (
                     <div
                       key={email}
                       className="p-2.5 bg-[#101C2E] rounded-xl border border-[#1A2B44] flex items-center justify-between text-xs"
@@ -1520,9 +1522,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           {idx + 1}
                         </div>
                         <span className="font-mono font-bold text-white">{email}</span>
-                        {email.toLowerCase() === 'alma.trilles@codiagro.com' && (
+                        {email.toLowerCase() === 'formacioncodiagro@gmail.com' && (
                           <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
                             Admin Principal & Emisor
+                          </span>
+                        )}
+                        {email.toLowerCase() === 'alma.trilles@codiagro.com' && (
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            Admin RRHH
                           </span>
                         )}
                         {email.toLowerCase() === 'codiagrooscar@gmail.com' && (
@@ -1532,11 +1539,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         )}
                       </div>
 
-                      {email.toLowerCase() !== 'alma.trilles@codiagro.com' && (
+                      {email.toLowerCase() !== 'formacioncodiagro@gmail.com' && (
                         <button
                           type="button"
                           onClick={() => handleRemoveAdminEmail(email)}
-                          className="p-1 text-slate-400 hover:text-rose-400 transition"
+                          className="p-1 text-slate-400 hover:text-rose-400 transition cursor-pointer"
                           title="Eliminar permiso de administrador"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1562,9 +1569,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <input
                       type="email"
                       required
-                      value={formData.adminEmail || 'alma.trilles@codiagro.com'}
+                      value={formData.adminEmail || 'formacioncodiagro@gmail.com'}
                       onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                      placeholder="alma.trilles@codiagro.com"
+                      placeholder="formacioncodiagro@gmail.com"
                       className="w-full bg-[#101C2E] border border-[#1A2B44] rounded-xl pl-9 pr-3 py-2 text-white font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-hidden text-xs"
                     />
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />

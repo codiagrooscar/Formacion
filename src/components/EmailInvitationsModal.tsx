@@ -241,9 +241,9 @@ export default function EmailInvitationsModal({
               customMessage: convocationNote,
               syllabusAttachment,
               smtpConfig: {
-                host: settings.smtpHost || 'smtp.office365.com',
-                port: settings.smtpPort || 587,
-                user: settings.smtpUser || settings.adminEmail || 'alma.trilles@codiagro.com',
+                host: settings.smtpHost || 'smtp.gmail.com',
+                port: settings.smtpPort || 465,
+                user: settings.smtpUser || settings.adminEmail || 'formacioncodiagro@gmail.com',
                 pass: settings.smtpPass
               }
             })
@@ -283,9 +283,9 @@ export default function EmailInvitationsModal({
               customMessage: evaluationNote,
               pdfAttachment,
               smtpConfig: {
-                host: settings.smtpHost || 'smtp.office365.com',
-                port: settings.smtpPort || 587,
-                user: settings.smtpUser || settings.adminEmail || 'alma.trilles@codiagro.com',
+                host: settings.smtpHost || 'smtp.gmail.com',
+                port: settings.smtpPort || 465,
+                user: settings.smtpUser || settings.adminEmail || 'formacioncodiagro@gmail.com',
                 pass: settings.smtpPass
               }
             })

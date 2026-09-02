@@ -120,7 +120,7 @@ export default function App() {
               trainings: loadedTrainings,
               evaluations: loadedEvals,
               settings: loadedSettings,
-              adminEmail: loadedSettings.adminEmail || 'alma.trilles@codiagro.com',
+              adminEmail: loadedSettings.adminEmail || 'formacioncodiagro@gmail.com',
               forceCheck: false,
             }),
           }).catch((e) => {
@@ -243,7 +243,7 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            adminEmail: settings.adminEmail || 'alma.trilles@codiagro.com',
+            adminEmail: settings.adminEmail || 'formacioncodiagro@gmail.com',
             trainingCode: evalData.trainingCode,
             trainingTitle: evalData.trainingTitle,
             courseId: evalData.trainingActionId,
@@ -256,9 +256,9 @@ export default function App() {
             actionPlanCommitment: evalData.qualitative?.actionPlanCommitment,
             appUrl,
             smtpConfig: {
-              host: settings.smtpHost || 'smtp.office365.com',
-              port: settings.smtpPort || 587,
-              user: settings.smtpUser || settings.adminEmail || 'alma.trilles@codiagro.com',
+              host: settings.smtpHost || 'smtp.gmail.com',
+              port: settings.smtpPort || 465,
+              user: settings.smtpUser || settings.adminEmail || 'formacioncodiagro@gmail.com',
               pass: settings.smtpPass
             }
           })

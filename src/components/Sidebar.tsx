@@ -74,8 +74,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const authorizedList = [
-    settings?.adminEmail || 'alma.trilles@codiagro.com',
+    settings?.adminEmail || 'formacioncodiagro@gmail.com',
     ...(settings?.authorizedAdminEmails || []),
+    'formacioncodiagro@gmail.com',
     'alma.trilles@codiagro.com',
     'codiagrooscar@gmail.com'
   ].map(e => e.toLowerCase());

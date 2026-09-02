@@ -26,14 +26,14 @@ async function startServer() {
 
   // Mail Transporter for Gmail / Outlook (Office 365) / SMTP
   const getMailTransporter = (customConfig?: { host?: string; port?: number; user?: string; pass?: string }) => {
-    const user = customConfig?.user || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+    const user = customConfig?.user || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
     const isOutlook = user.toLowerCase().includes('codiagro.com') || (customConfig?.host && customConfig.host.includes('office365'));
     const defaultHost = isOutlook ? 'smtp.office365.com' : 'smtp.gmail.com';
     const defaultPort = isOutlook ? 587 : 465;
 
     const host = customConfig?.host || process.env.SMTP_HOST || defaultHost;
     const port = Number(customConfig?.port) || Number(process.env.SMTP_PORT) || defaultPort;
-    const pass = customConfig?.pass || process.env.SMTP_PASS;
+    const pass = customConfig?.pass || process.env.SMTP_PASS || '@Rrhhformacion';
 
     if (!pass) {
       return null;
@@ -64,8 +64,8 @@ async function startServer() {
       status: 'ok', 
       emailService: {
         configured: hasSmtpConfigured,
-        sender: process.env.SMTP_USER || 'alma.trilles@codiagro.com',
-        host: process.env.SMTP_HOST || 'smtp.office365.com'
+        sender: process.env.SMTP_USER || 'formacioncodiagro@gmail.com',
+        host: process.env.SMTP_HOST || 'smtp.gmail.com'
       },
       timestamp: new Date().toISOString() 
     });
@@ -74,9 +74,9 @@ async function startServer() {
   // API 1.5: Test Email Connection
   app.post('/api/test-email', async (req, res) => {
     try {
-      const { targetEmail = 'alma.trilles@codiagro.com', smtpConfig } = req.body;
+      const { targetEmail = 'formacioncodiagro@gmail.com', smtpConfig } = req.body;
       const mailSetup = getMailTransporter(smtpConfig);
-      const sender = smtpConfig?.user || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+      const sender = smtpConfig?.user || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
 
       if (!mailSetup) {
         return res.json({
@@ -164,7 +164,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios (destinatario o título).' });
       }
 
-      const sender = smtpConfig?.user || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+      const sender = smtpConfig?.user || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
       const mailSetup = getMailTransporter(smtpConfig);
 
       const htmlContent = `
@@ -329,7 +329,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios (destinatario o título).' });
       }
 
-      const sender = smtpConfig?.user || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+      const sender = smtpConfig?.user || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
       const mailSetup = getMailTransporter(smtpConfig);
 
       const htmlContent = `
@@ -482,7 +482,7 @@ async function startServer() {
   app.post('/api/notify-admin-evaluation', async (req, res) => {
     try {
       const { 
-        adminEmail = 'alma.trilles@codiagro.com', 
+        adminEmail = 'formacioncodiagro@gmail.com', 
         trainingTitle, 
         trainingCode, 
         employeeName, 
@@ -499,7 +499,7 @@ async function startServer() {
         smtpConfig
       } = req.body;
 
-      const sender = smtpConfig?.user || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+      const sender = smtpConfig?.user || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
       const mailSetup = getMailTransporter(smtpConfig);
 
       // Determine main application URL
@@ -618,14 +618,14 @@ async function startServer() {
         trainings = [], 
         evaluations = [], 
         settings, 
-        adminEmail = 'alma.trilles@codiagro.com', 
+        adminEmail = 'formacioncodiagro@gmail.com', 
         appUrl, 
         smtpConfig,
         forceCheck = false 
       } = req.body;
 
-      const targetEmail = settings?.adminEmail || adminEmail || 'alma.trilles@codiagro.com';
-      const sender = smtpConfig?.user || settings?.smtpUser || process.env.SMTP_USER || 'alma.trilles@codiagro.com';
+      const targetEmail = settings?.adminEmail || adminEmail || 'formacioncodiagro@gmail.com';
+      const sender = smtpConfig?.user || settings?.smtpUser || process.env.SMTP_USER || 'formacioncodiagro@gmail.com';
       const mailSetup = getMailTransporter(smtpConfig || (settings ? {
         host: settings.smtpHost,
         port: settings.smtpPort,

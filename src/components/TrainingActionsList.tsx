@@ -393,6 +393,23 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {trainings.length > 0 && (
+              <button
+                id="trainings-btn-clear-all"
+                onClick={async () => {
+                  if (window.confirm('¿Deseas vaciar todos los cursos para empezar con el catálogo limpio desde cero?')) {
+                    for (const t of trainings) {
+                      await onDeleteTraining(t.id);
+                    }
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-medium text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition shrink-0"
+                title="Vaciar catálogo de cursos"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Vaciar Cursos
+              </button>
+            )}
             <button
               id="trainings-btn-new"
               onClick={handleOpenNewModal}

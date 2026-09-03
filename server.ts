@@ -1,11 +1,81 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+import { 
+  INITIAL_TRAINING_ACTIONS, 
+  INITIAL_EVALUATIONS, 
+  INITIAL_FOLLOWUPS, 
+  INITIAL_SETTINGS 
+} from './src/data/initialData';
 
 dotenv.config();
+
+// Persistent JSON Database for CODIAGRO on Render & Server
+const DB_FILE_PATH = path.join(process.cwd(), 'data', 'codiagro_database.json');
+
+interface ServerDbSchema {
+  trainings: any[];
+  evaluations: any[];
+  followups: any[];
+  settings: any;
+  initialized: boolean;
+  lastUpdated: string;
+}
+
+function ensureDbFile(): ServerDbSchema {
+  try {
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    if (fs.existsSync(DB_FILE_PATH)) {
+      const raw = fs.readFileSync(DB_FILE_PATH, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.trainings)) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('[Server DB] Error reading database file:', e);
+  }
+
+  const initialDb: ServerDbSchema = {
+    trainings: INITIAL_TRAINING_ACTIONS,
+    evaluations: INITIAL_EVALUATIONS,
+    followups: INITIAL_FOLLOWUPS,
+    settings: INITIAL_SETTINGS,
+    initialized: true,
+    lastUpdated: new Date().toISOString(),
+  };
+
+  try {
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(initialDb, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[Server DB] Error writing initial database file:', err);
+  }
+
+  return initialDb;
+}
+
+function saveDbFile(data: ServerDbSchema) {
+  try {
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    data.lastUpdated = new Date().toISOString();
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    console.error('[Server DB Error] Could not save database file:', e);
+  }
+}
+
+// Ensure DB file exists on launch
+ensureDbFile();
 
 async function startServer() {
   const app = express();
@@ -14,6 +84,183 @@ async function startServer() {
   // Increase payload size to handle high-resolution image uploads from camera and scanner
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+  // ==========================================
+  // SERVER PERSISTENT DATABASE API ENDPOINTS
+  // ==========================================
+  app.get('/api/db/all', (req, res) => {
+    const db = ensureDbFile();
+    res.json({
+      success: true,
+      trainings: db.trainings || [],
+      evaluations: db.evaluations || [],
+      followups: db.followups || [],
+      settings: db.settings || {},
+      lastUpdated: db.lastUpdated,
+    });
+  });
+
+  app.get('/api/db/trainings', (req, res) => {
+    const db = ensureDbFile();
+    res.json(db.trainings || []);
+  });
+
+  app.post('/api/db/trainings', (req, res) => {
+    const db = ensureDbFile();
+    const training = req.body;
+    if (!training || !training.id) {
+      return res.status(400).json({ error: 'Training must have an id' });
+    }
+    const current = db.trainings || [];
+    const index = current.findIndex((t: any) => t.id === training.id);
+    if (index >= 0) {
+      current[index] = training;
+    } else {
+      current.unshift(training);
+    }
+    db.trainings = current;
+    saveDbFile(db);
+    console.log(`[Server DB] Saved training: ${training.title} (${training.id})`);
+    res.json({ success: true, training });
+  });
+
+  app.delete('/api/db/trainings/:id', (req, res) => {
+    const db = ensureDbFile();
+    const id = req.params.id;
+    db.trainings = (db.trainings || []).filter((t: any) => t.id !== id);
+    saveDbFile(db);
+    console.log(`[Server DB] Deleted training: ${id}`);
+    res.json({ success: true, message: 'Training deleted' });
+  });
+
+  app.get('/api/db/evaluations', (req, res) => {
+    const db = ensureDbFile();
+    res.json(db.evaluations || []);
+  });
+
+  app.post('/api/db/evaluations', (req, res) => {
+    const db = ensureDbFile();
+    const evaluation = req.body;
+    if (!evaluation || !evaluation.id) {
+      return res.status(400).json({ error: 'Evaluation must have an id' });
+    }
+    const current = db.evaluations || [];
+    const index = current.findIndex((e: any) => e.id === evaluation.id);
+    if (index >= 0) {
+      current[index] = evaluation;
+    } else {
+      current.unshift(evaluation);
+    }
+    db.evaluations = current;
+
+    if (evaluation.trainingActionId && Array.isArray(db.trainings)) {
+      const trIndex = db.trainings.findIndex((t: any) => t.id === evaluation.trainingActionId);
+      if (trIndex >= 0) {
+        const courseEvals = db.evaluations.filter((e: any) => e.trainingActionId === evaluation.trainingActionId);
+        const totalScore = courseEvals.reduce((acc: number, curr: any) => acc + (curr.overallScore || 0), 0);
+        const avgScore = courseEvals.length > 0 ? Number((totalScore / courseEvals.length).toFixed(1)) : 0;
+        db.trainings[trIndex].satisfactionScore = avgScore;
+        db.trainings[trIndex].receivedEvaluationsCount = courseEvals.length;
+      }
+    }
+
+    saveDbFile(db);
+    res.json({ success: true, evaluation });
+  });
+
+  app.delete('/api/db/evaluations/:id', (req, res) => {
+    const db = ensureDbFile();
+    const id = req.params.id;
+    const target = (db.evaluations || []).find((e: any) => e.id === id);
+    db.evaluations = (db.evaluations || []).filter((e: any) => e.id !== id);
+
+    if (target && target.trainingActionId && Array.isArray(db.trainings)) {
+      const trIndex = db.trainings.findIndex((t: any) => t.id === target.trainingActionId);
+      if (trIndex >= 0) {
+        const courseEvals = db.evaluations.filter((e: any) => e.trainingActionId === target.trainingActionId);
+        const totalScore = courseEvals.reduce((acc: number, curr: any) => acc + (curr.overallScore || 0), 0);
+        const avgScore = courseEvals.length > 0 ? Number((totalScore / courseEvals.length).toFixed(1)) : 0;
+        db.trainings[trIndex].satisfactionScore = avgScore;
+        db.trainings[trIndex].receivedEvaluationsCount = courseEvals.length;
+      }
+    }
+
+    saveDbFile(db);
+    res.json({ success: true, message: 'Evaluation deleted' });
+  });
+
+  app.get('/api/db/followups', (req, res) => {
+    const db = ensureDbFile();
+    res.json(db.followups || []);
+  });
+
+  app.post('/api/db/followups', (req, res) => {
+    const db = ensureDbFile();
+    const followup = req.body;
+    if (!followup || !followup.id) {
+      return res.status(400).json({ error: 'Followup must have an id' });
+    }
+    const current = db.followups || [];
+    const index = current.findIndex((f: any) => f.id === followup.id);
+    if (index >= 0) {
+      current[index] = followup;
+    } else {
+      current.unshift(followup);
+    }
+    db.followups = current;
+    saveDbFile(db);
+    res.json({ success: true, followup });
+  });
+
+  app.delete('/api/db/followups/:id', (req, res) => {
+    const db = ensureDbFile();
+    const id = req.params.id;
+    db.followups = (db.followups || []).filter((f: any) => f.id !== id);
+    saveDbFile(db);
+    res.json({ success: true, message: 'Followup deleted' });
+  });
+
+  app.get('/api/db/settings', (req, res) => {
+    const db = ensureDbFile();
+    res.json(db.settings || {});
+  });
+
+  app.post('/api/db/settings', (req, res) => {
+    const db = ensureDbFile();
+    db.settings = {
+      ...db.settings,
+      ...req.body,
+      adminEmail: 'formacioncodiagro@gmail.com',
+      smtpUser: 'formacioncodiagro@gmail.com',
+      smtpHost: 'smtp.gmail.com',
+      smtpPort: 465,
+    };
+    saveDbFile(db);
+    res.json({ success: true, settings: db.settings });
+  });
+
+  app.post('/api/db/clear-all', (req, res) => {
+    const db = ensureDbFile();
+    db.trainings = [];
+    db.evaluations = [];
+    db.followups = [];
+    saveDbFile(db);
+    console.log('[Server DB] Cleared all training actions, evaluations, and followups.');
+    res.json({ success: true, message: 'All courses and evaluations cleared' });
+  });
+
+  app.post('/api/db/reset', (req, res) => {
+    const initialDb: ServerDbSchema = {
+      trainings: INITIAL_TRAINING_ACTIONS,
+      evaluations: INITIAL_EVALUATIONS,
+      followups: INITIAL_FOLLOWUPS,
+      settings: INITIAL_COMPANY_SETTINGS,
+      initialized: true,
+      lastUpdated: new Date().toISOString(),
+    };
+    saveDbFile(initialDb);
+    res.json({ success: true, message: 'Reset to initial data' });
+  });
 
   // Initialize Gemini AI client lazily/safely
   const getGeminiClient = () => {

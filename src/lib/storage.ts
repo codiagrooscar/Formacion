@@ -33,32 +33,50 @@ export class AppStorage {
   // 1. Fetch Training Actions
   static async getTrainingActions(): Promise<TrainingAction[]> {
     let list: TrainingAction[] = [];
-    let fetchedFromFirestore = false;
+    let fetched = false;
+
+    // A. First priority: Server DB (works on Render, local server, and everywhere)
     try {
-      const snap = await getDocs(collection(db, 'training_actions'));
-      fetchedFromFirestore = true;
-      if (!snap.empty) {
-        snap.forEach((d) => {
-          list.push({ ...d.data(), id: d.id } as TrainingAction);
-        });
+      const res = await fetch('/api/db/trainings');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          fetched = true;
+        }
       }
     } catch (e) {
-      console.warn('Firestore fetch failed, checking local cache:', e);
+      // Offline / client-only fallback
+    }
+
+    // B. Second priority: Firestore
+    if (!fetched) {
+      try {
+        const snap = await getDocs(collection(db, 'training_actions'));
+        if (!snap.empty) {
+          list = [];
+          snap.forEach((d) => {
+            list.push({ ...d.data(), id: d.id } as TrainingAction);
+          });
+          fetched = true;
+        }
+      } catch (e) {
+        console.warn('Firestore fetch failed:', e);
+      }
     }
 
     const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
 
-    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
+    // C. Third priority: LocalStorage
+    if (!fetched || (!isInitializedLocally && list.length === 0)) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.TRAININGS);
       if (local !== null) {
         try {
           list = JSON.parse(local);
         } catch {}
       } else if (!isInitializedLocally) {
-        // First run ever: seed demo data
         list = INITIAL_TRAINING_ACTIONS;
         localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
-        // Push initial to firestore if online
         for (const t of INITIAL_TRAINING_ACTIONS) {
           setDoc(doc(db, 'training_actions', t.id), t).catch(() => {});
         }
@@ -75,7 +93,6 @@ export class AppStorage {
         const codeNum = parseInt(num, 10) || (idx + 1);
         updatedCourse.code = `26${codeNum.toString().padStart(3, '0')}`;
       }
-      // If course has attendees defined, guarantee totalParticipantsPlanned reflects attendees.length
       if (updatedCourse.attendees && updatedCourse.attendees.length > 0) {
         updatedCourse.totalParticipantsPlanned = updatedCourse.attendees.length;
         if (updatedCourse.status === 'completed' && (!updatedCourse.totalParticipantsAttended || updatedCourse.totalParticipantsAttended > updatedCourse.attendees.length)) {
@@ -94,14 +111,31 @@ export class AppStorage {
     const id = action.id || `act-${Date.now()}`;
     const toSave: TrainingAction = { ...action, id };
 
+    // 1. Save to Server DB
+    try {
+      await fetch('/api/db/trainings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(toSave),
+      });
+    } catch (e) {
+      console.warn('Server save warning:', e);
+    }
+
+    // 2. Save to Firestore
     try {
       await setDoc(doc(db, 'training_actions', id), toSave);
     } catch (e) {
-      console.warn('Firestore write failed, saving locally:', e);
+      console.warn('Firestore write warning:', e);
     }
 
-    // Update local
-    const current = await this.getTrainingActions();
+    // 3. Save to LocalStorage
+    let current: TrainingAction[] = [];
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.TRAININGS);
+      if (raw) current = JSON.parse(raw);
+    } catch {}
+
     const index = current.findIndex((item) => item.id === id);
     let updated: TrainingAction[];
     if (index >= 0) {
@@ -118,11 +152,19 @@ export class AppStorage {
   // 3. Delete Training Action
   static async deleteTrainingAction(id: string): Promise<void> {
     try {
+      await fetch(`/api/db/trainings/${id}`, { method: 'DELETE' });
+    } catch (e) {}
+
+    try {
       await deleteDoc(doc(db, 'training_actions', id));
-    } catch (e) {
-      console.warn('Firestore delete failed:', e);
-    }
-    const current = await this.getTrainingActions();
+    } catch (e) {}
+
+    let current: TrainingAction[] = [];
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.TRAININGS);
+      if (raw) current = JSON.parse(raw);
+    } catch {}
+
     const updated = current.filter((item) => item.id !== id);
     localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.TRAININGS, JSON.stringify(updated));
@@ -131,22 +173,38 @@ export class AppStorage {
   // 4. Fetch Evaluations
   static async getEvaluations(): Promise<Evaluation[]> {
     let list: Evaluation[] = [];
-    let fetchedFromFirestore = false;
+    let fetched = false;
+
+    // A. Server DB
     try {
-      const snap = await getDocs(collection(db, 'evaluations'));
-      fetchedFromFirestore = true;
-      if (!snap.empty) {
-        snap.forEach((d) => {
-          list.push({ ...d.data(), id: d.id } as Evaluation);
-        });
+      const res = await fetch('/api/db/evaluations');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          fetched = true;
+        }
       }
-    } catch (e) {
-      console.warn('Firestore evaluations fetch error:', e);
+    } catch (e) {}
+
+    // B. Firestore
+    if (!fetched) {
+      try {
+        const snap = await getDocs(collection(db, 'evaluations'));
+        if (!snap.empty) {
+          list = [];
+          snap.forEach((d) => {
+            list.push({ ...d.data(), id: d.id } as Evaluation);
+          });
+          fetched = true;
+        }
+      } catch (e) {}
     }
 
     const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
 
-    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
+    // C. LocalStorage
+    if (!fetched || (!isInitializedLocally && list.length === 0)) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.EVALUATIONS);
       if (local !== null) {
         try {
@@ -310,22 +368,40 @@ export class AppStorage {
   // 6. Fetch Followups
   static async getFollowups(): Promise<EffectivenessFollowup[]> {
     let list: EffectivenessFollowup[] = [];
-    let fetchedFromFirestore = false;
+    let fetched = false;
+
+    // A. Server DB
     try {
-      const snap = await getDocs(collection(db, 'followups'));
-      fetchedFromFirestore = true;
-      if (!snap.empty) {
-        snap.forEach((d) => {
-          list.push({ ...d.data(), id: d.id } as EffectivenessFollowup);
-        });
+      const res = await fetch('/api/db/followups');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          list = data;
+          fetched = true;
+        }
       }
-    } catch (e) {
-      console.warn('Firestore followups fetch error:', e);
+    } catch (e) {}
+
+    // B. Firestore
+    if (!fetched) {
+      try {
+        const snap = await getDocs(collection(db, 'followups'));
+        if (!snap.empty) {
+          list = [];
+          snap.forEach((d) => {
+            list.push({ ...d.data(), id: d.id } as EffectivenessFollowup);
+          });
+          fetched = true;
+        }
+      } catch (e) {
+        console.warn('Firestore followups fetch error:', e);
+      }
     }
 
     const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
 
-    if (!fetchedFromFirestore || (!isInitializedLocally && list.length === 0)) {
+    // C. LocalStorage
+    if (!fetched || (!isInitializedLocally && list.length === 0)) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
       if (local !== null) {
         try {
@@ -355,7 +431,24 @@ export class AppStorage {
       status: followup.status || 'completed'
     };
 
-    // 1. Immediately update LocalStorage
+    // 1. Server DB
+    try {
+      await fetch('/api/db/followups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(toSave),
+      });
+    } catch (e) {}
+
+    // 2. Firestore
+    try {
+      const sanitized = JSON.parse(JSON.stringify(toSave));
+      await setDoc(doc(db, 'followups', id), sanitized);
+    } catch (e) {
+      console.warn('Firestore followup save warning:', e);
+    }
+
+    // 3. LocalStorage
     let currentLocal: EffectivenessFollowup[] = [];
     const rawLocal = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
     if (rawLocal) {
@@ -375,20 +468,19 @@ export class AppStorage {
     localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(updated));
 
-    // 2. Persist to Firestore with sanitized object
-    try {
-      const sanitized = JSON.parse(JSON.stringify(toSave));
-      await setDoc(doc(db, 'followups', id), sanitized);
-    } catch (e) {
-      console.warn('Firestore followup save warning:', e);
-    }
-
     return toSave;
   }
 
   // 7b. Delete Followup
   static async deleteFollowup(id: string): Promise<void> {
-    // 1. Update LocalStorage immediately
+    try {
+      await fetch(`/api/db/followups/${id}`, { method: 'DELETE' });
+    } catch (e) {}
+
+    try {
+      await deleteDoc(doc(db, 'followups', id));
+    } catch (e) {}
+
     let currentLocal: EffectivenessFollowup[] = [];
     const rawLocal = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
     if (rawLocal) {
@@ -399,24 +491,32 @@ export class AppStorage {
     const updated = currentLocal.filter((f) => f.id !== id);
     localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     localStorage.setItem(LOCAL_STORAGE_KEYS.FOLLOWUPS, JSON.stringify(updated));
-
-    // 2. Delete from Firestore
-    try {
-      await deleteDoc(doc(db, 'followups', id));
-    } catch (e) {
-      console.warn('Firestore followup delete warning:', e);
-    }
   }
 
   // 8. Company Settings
   static async getSettings(): Promise<CompanySettings> {
     let settings: CompanySettings | null = null;
+
+    // A. Server DB
     try {
-      const snap = await getDocs(collection(db, 'company_settings'));
-      if (!snap.empty) {
-        settings = snap.docs[0].data() as CompanySettings;
+      const res = await fetch('/api/db/settings');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.companyName) {
+          settings = data;
+        }
       }
     } catch (e) {}
+
+    // B. Firestore
+    if (!settings) {
+      try {
+        const snap = await getDocs(collection(db, 'company_settings'));
+        if (!snap.empty) {
+          settings = snap.docs[0].data() as CompanySettings;
+        }
+      } catch (e) {}
+    }
 
     if (!settings) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.SETTINGS);
@@ -470,6 +570,14 @@ export class AppStorage {
   }
 
   static async saveSettings(settings: CompanySettings): Promise<void> {
+    try {
+      await fetch('/api/db/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+    } catch (e) {}
+
     try {
       await setDoc(doc(db, 'company_settings', 'main_config'), settings);
     } catch (e) {}

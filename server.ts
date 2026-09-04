@@ -254,12 +254,12 @@ async function startServer() {
       trainings: INITIAL_TRAINING_ACTIONS,
       evaluations: INITIAL_EVALUATIONS,
       followups: INITIAL_FOLLOWUPS,
-      settings: INITIAL_COMPANY_SETTINGS,
+      settings: INITIAL_SETTINGS,
       initialized: true,
       lastUpdated: new Date().toISOString(),
     };
     saveDbFile(initialDb);
-    res.json({ success: true, message: 'Reset to initial data' });
+    res.json({ success: true, message: 'Reset to initial clean state' });
   });
 
   // Initialize Gemini AI client lazily/safely

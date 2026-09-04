@@ -105,6 +105,15 @@ async function startServer() {
     res.json(db.trainings || []);
   });
 
+  app.post('/api/db/trainings/sync-all', (req, res) => {
+    const db = ensureDbFile();
+    if (Array.isArray(req.body)) {
+      db.trainings = req.body;
+      saveDbFile(db);
+    }
+    res.json({ success: true });
+  });
+
   app.post('/api/db/trainings', (req, res) => {
     const db = ensureDbFile();
     const training = req.body;

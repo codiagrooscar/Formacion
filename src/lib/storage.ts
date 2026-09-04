@@ -40,7 +40,7 @@ export class AppStorage {
       const res = await fetch('/api/db/trainings');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           list = data;
           fetched = true;
         }
@@ -65,25 +65,19 @@ export class AppStorage {
       }
     }
 
-    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
-
     // C. Third priority: LocalStorage
-    if (!fetched || (!isInitializedLocally && list.length === 0)) {
+    if (!fetched) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.TRAININGS);
       if (local !== null) {
         try {
           list = JSON.parse(local);
         } catch {}
-      } else if (!isInitializedLocally) {
-        list = INITIAL_TRAINING_ACTIONS;
-        localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
-        for (const t of INITIAL_TRAINING_ACTIONS) {
-          setDoc(doc(db, 'training_actions', t.id), t).catch(() => {});
-        }
+      } else {
+        list = [];
       }
-    } else {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
     }
+
+    localStorage.setItem(LOCAL_STORAGE_KEYS.INITIALIZED, 'true');
 
     // Auto-migrate legacy FOR-2026-XX codes and sync attendees counts
     list = list.map((t, idx) => {
@@ -180,7 +174,7 @@ export class AppStorage {
       const res = await fetch('/api/db/evaluations');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           list = data;
           fetched = true;
         }
@@ -201,20 +195,15 @@ export class AppStorage {
       } catch (e) {}
     }
 
-    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
-
     // C. LocalStorage
-    if (!fetched || (!isInitializedLocally && list.length === 0)) {
+    if (!fetched) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.EVALUATIONS);
       if (local !== null) {
         try {
           list = JSON.parse(local);
         } catch {}
-      } else if (!isInitializedLocally) {
-        list = INITIAL_EVALUATIONS;
-        for (const e of INITIAL_EVALUATIONS) {
-          setDoc(doc(db, 'evaluations', e.id), e).catch(() => {});
-        }
+      } else {
+        list = [];
       }
     }
 
@@ -375,7 +364,7 @@ export class AppStorage {
       const res = await fetch('/api/db/followups');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           list = data;
           fetched = true;
         }
@@ -398,20 +387,15 @@ export class AppStorage {
       }
     }
 
-    const isInitializedLocally = localStorage.getItem(LOCAL_STORAGE_KEYS.INITIALIZED) === 'true';
-
     // C. LocalStorage
-    if (!fetched || (!isInitializedLocally && list.length === 0)) {
+    if (!fetched) {
       const local = localStorage.getItem(LOCAL_STORAGE_KEYS.FOLLOWUPS);
       if (local !== null) {
         try {
           list = JSON.parse(local);
         } catch {}
-      } else if (!isInitializedLocally) {
-        list = INITIAL_FOLLOWUPS;
-        for (const f of INITIAL_FOLLOWUPS) {
-          setDoc(doc(db, 'followups', f.id), f).catch(() => {});
-        }
+      } else {
+        list = [];
       }
     }
 

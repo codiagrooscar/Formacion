@@ -344,14 +344,16 @@ async function startServer() {
     });
   };
 
-  const sendViaBrevo = async (apiKey: string, mailOptions: any) => {
+  const sendViaBrevo = async (apiKey: string, mailOptions: any, fallbackSender?: string) => {
     const url = 'https://api.brevo.com/v3/smtp/email';
     const to = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map((e: string) => ({ email: e }));
     const cc = mailOptions.cc ? (Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc]).map((e: string) => ({ email: e })) : undefined;
     const bcc = mailOptions.bcc ? (Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc]).map((e: string) => ({ email: e })) : undefined;
     
+    const senderEmail = fallbackSender || GMAIL_SENDER_EMAIL;
+
     const body: any = {
-      sender: { name: 'CODIAGRO Formación', email: GMAIL_SENDER_EMAIL },
+      sender: { name: 'CODIAGRO Formación', email: senderEmail },
       to,
       subject: mailOptions.subject,
       htmlContent: mailOptions.html,
@@ -379,7 +381,11 @@ async function startServer() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(`Brevo API Error: ${err.message || res.statusText}`);
+      const msg = err.message || res.statusText || 'Error de conexión';
+      if (msg.includes('authorised_ips') || msg.includes('unrecognised IP address')) {
+        throw new Error('Brevo Seguridad IP: Tu cuenta de Brevo tiene activada la protección por IP. Entra en https://app.brevo.com/security/authorised_ips y desactiva la restricción de IP (o añade la IP) para permitir envíos desde la nube (Render).');
+      }
+      throw new Error(`Brevo API: ${msg}`);
     }
     return await res.json();
   };
@@ -452,7 +458,7 @@ async function startServer() {
     if (brevoApiKey && brevoApiKey.trim() !== '') {
       return {
         transporter: null,
-        sendEmail: async (mailOptions: any) => sendViaBrevo(brevoApiKey.trim(), mailOptions),
+        sendEmail: async (mailOptions: any) => sendViaBrevo(brevoApiKey.trim(), mailOptions, user),
         sender: user
       };
     }

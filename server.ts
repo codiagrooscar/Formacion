@@ -310,26 +310,53 @@ async function startServer() {
     };
   };
 
-  // Mail Transporter for Gmail / Outlook (Office 365) / SMTP
+  // Mail Transporter for Gmail (service: 'gmail') / Outlook / Custom SMTP
+  const OUTLOOK_QUALITY_EMAIL = 'alma.trilles@codiagro.com';
+  const GMAIL_SENDER_EMAIL = 'formacioncodiagro@gmail.com';
+
   const getMailTransporter = (customConfig?: { host?: string; port?: number; user?: string; pass?: string }) => {
+    const db = ensureDbFile();
     const user = (customConfig?.user && customConfig.user.trim() !== '')
       ? customConfig.user.trim()
-      : (process.env.SMTP_USER || 'formacioncodiagro@gmail.com');
+      : (db?.settings?.smtpUser || process.env.SMTP_USER || GMAIL_SENDER_EMAIL);
+    
+    const isGmail = user.toLowerCase().endsWith('@gmail.com') || (customConfig?.host && customConfig.host.includes('gmail'));
     const isOutlook = user.toLowerCase().includes('codiagro.com') || (customConfig?.host && customConfig.host.includes('office365'));
     const defaultHost = isOutlook ? 'smtp.office365.com' : 'smtp.gmail.com';
     const defaultPort = isOutlook ? 587 : 465;
 
-    const host = customConfig?.host || process.env.SMTP_HOST || defaultHost;
-    const port = Number(customConfig?.port) || Number(process.env.SMTP_PORT) || defaultPort;
+    const host = customConfig?.host || db?.settings?.smtpHost || process.env.SMTP_HOST || defaultHost;
+    const port = Number(customConfig?.port) || Number(db?.settings?.smtpPort) || Number(process.env.SMTP_PORT) || defaultPort;
     const rawPass = (customConfig?.pass && customConfig.pass.trim() !== '') 
       ? customConfig.pass.trim() 
-      : (process.env.SMTP_PASS && process.env.SMTP_PASS.trim() !== '' ? process.env.SMTP_PASS.trim() : '');
+      : (db?.settings?.smtpPass && db.settings.smtpPass.trim() !== '' 
+          ? db.settings.smtpPass.trim() 
+          : (process.env.SMTP_PASS && process.env.SMTP_PASS.trim() !== '' ? process.env.SMTP_PASS.trim() : ''));
     
     // Remove any spaces (e.g. Google displays app passwords as 'abcd efgh ijkl mnop')
     const pass = rawPass.replace(/\s+/g, '');
 
     if (!pass) {
       return null;
+    }
+
+    // For Gmail, using service: 'gmail' in Nodemailer is the most stable and robust
+    if (isGmail) {
+      return {
+        transporter: nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user,
+            pass,
+          },
+          pool: true,
+          maxConnections: 3,
+          connectionTimeout: 15000,
+          greetingTimeout: 15000,
+          socketTimeout: 20000,
+        }),
+        sender: user
+      };
     }
 
     const isSecure = port === 465;
@@ -345,9 +372,9 @@ async function startServer() {
         tls: {
           rejectUnauthorized: false
         },
-        connectionTimeout: 8000,
-        greetingTimeout: 8000,
-        socketTimeout: 10000,
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
       }),
       sender: user
     };
@@ -385,9 +412,12 @@ async function startServer() {
 
       const { transporter } = mailSetup;
 
+      const testRecipients = Array.from(new Set([targetEmail, OUTLOOK_QUALITY_EMAIL].filter(Boolean)));
       await transporter.sendMail({
         from: `"CODIAGRO Formación & Calidad" <${sender}>`,
         to: targetEmail,
+        cc: targetEmail.toLowerCase() !== OUTLOOK_QUALITY_EMAIL.toLowerCase() ? OUTLOOK_QUALITY_EMAIL : undefined,
+        replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
         subject: `✅ [CODIAGRO] Prueba de Envío de Correo - Sistema ISO 9001`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -399,11 +429,11 @@ async function startServer() {
             <div style="background-color: #ffffff; padding: 24px; border-radius: 8px; border: 1px solid #cbd5e1;">
               <h2 style="color: #0f172a; font-size: 18px; margin-top: 0;">¡Configuración de Correo Exitosa!</h2>
               <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-                Este es un mensaje de prueba enviado automáticamente desde el servidor de <strong>CODIAGRO S.A.</strong> utilizando la cuenta <strong>${sender}</strong>.
+                Este es un mensaje de prueba enviado automáticamente desde el servidor de <strong>CODIAGRO S.A.</strong> utilizando la cuenta remitente de Gmail <strong>${sender}</strong> con reenvío/copia automática a Outlook (<strong>${OUTLOOK_QUALITY_EMAIL}</strong>).
               </p>
               <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 12px; margin: 16px 0; border-radius: 4px;">
                 <p style="color: #166534; font-size: 13px; margin: 0; font-weight: 600;">
-                  ✔ El servicio de envío de convocatorias, recordatorios y encuestas ISO está 100% operativo.
+                  ✔ El servicio de envío de convocatorias, recordatorios, encuestas y reenvío a Outlook está 100% operativo.
                 </p>
               </div>
               <p style="color: #64748b; font-size: 12px; margin: 16px 0 0 0;">
@@ -420,7 +450,7 @@ async function startServer() {
 
       res.json({
         success: true,
-        message: `Correo de prueba enviado con éxito a ${targetEmail} desde ${sender}`,
+        message: `Correo de prueba enviado con éxito a ${targetEmail} (con copia a Outlook: ${OUTLOOK_QUALITY_EMAIL}) desde ${sender}`,
         sender,
         targetEmail
       });
@@ -561,6 +591,8 @@ async function startServer() {
         const mailOptions: any = {
           from: `"CODIAGRO Formación" <${sender}>`,
           to,
+          bcc: [OUTLOOK_QUALITY_EMAIL, GMAIL_SENDER_EMAIL].filter(e => e.toLowerCase() !== to.toLowerCase()),
+          replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
           subject: `📅 [CODIAGRO] Convocatoria de Formación: ${trainingTitle} (Nº ${trainingCode || 'Oficial'})`,
           html: htmlContent,
         };
@@ -577,13 +609,13 @@ async function startServer() {
 
         await mailSetup.transporter.sendMail(mailOptions);
 
-        console.log(`[CONVOCATION EMAIL] Enviado con éxito a: ${to}${syllabusAttachment ? ' con temario PDF adjunto' : ''}`);
+        console.log(`[CONVOCATION EMAIL] Enviado con éxito a: ${to} (Copia a Outlook: ${OUTLOOK_QUALITY_EMAIL})${syllabusAttachment ? ' con temario PDF adjunto' : ''}`);
         return res.json({
           success: true,
           mode: 'live_smtp',
           deliveredTo: to,
           hasSyllabusAttached: !!syllabusAttachment,
-          message: `Convocatoria enviada con éxito a ${to}`,
+          message: `Convocatoria enviada con éxito a ${to} (con copia a ${OUTLOOK_QUALITY_EMAIL})`,
           timestamp: new Date().toISOString()
         });
       } else {
@@ -721,6 +753,8 @@ async function startServer() {
         const mailOptions: any = {
           from: `"CODIAGRO Calidad & Formación" <${sender}>`,
           to,
+          bcc: [OUTLOOK_QUALITY_EMAIL, GMAIL_SENDER_EMAIL].filter(e => e.toLowerCase() !== to.toLowerCase()),
+          replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
           subject: `📋 [CODIAGRO] Solicitud de Evaluación de Formación: ${trainingTitle} (RE0180104 Ed. 07)`,
           html: htmlContent,
         };
@@ -738,13 +772,13 @@ async function startServer() {
 
         await mailSetup.transporter.sendMail(mailOptions);
 
-        console.log(`[EVALUATION EMAIL] Enviado con éxito a: ${to} (PDF adjunto: ${!!pdfAttachment})`);
+        console.log(`[EVALUATION EMAIL] Enviado con éxito a: ${to} (Copia a Outlook: ${OUTLOOK_QUALITY_EMAIL}, PDF adjunto: ${!!pdfAttachment})`);
         return res.json({
           success: true,
           mode: 'live_smtp',
           deliveredTo: to,
           hasPdfAttached: !!pdfAttachment,
-          message: `Solicitud de evaluación enviada con éxito a ${to} con PDF oficial adjunto`,
+          message: `Solicitud de evaluación enviada con éxito a ${to} (con copia automática a ${OUTLOOK_QUALITY_EMAIL})`,
           timestamp: new Date().toISOString()
         });
       } else {
@@ -883,19 +917,26 @@ async function startServer() {
       `;
 
       if (mailSetup) {
+        const adminRecipients = Array.from(new Set([
+          adminEmail || OUTLOOK_QUALITY_EMAIL,
+          OUTLOOK_QUALITY_EMAIL,
+          GMAIL_SENDER_EMAIL
+        ].filter(Boolean)));
+
         await mailSetup.transporter.sendMail({
           from: `"CODIAGRO Sistema Calidad" <${sender}>`,
-          to: adminEmail,
+          to: adminRecipients,
+          replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
           subject: `🔔 [CODIAGRO] Nueva Evaluación: ${employeeName || 'Alumno'} - ${trainingTitle}`,
           html: htmlContent
         });
       }
 
-      console.log(`[ADMIN NOTIFICATION EMAIL] Notificación enviada a ${adminEmail} para ${trainingTitle}`);
+      console.log(`[ADMIN NOTIFICATION EMAIL] Notificación enviada a Outlook (${OUTLOOK_QUALITY_EMAIL}) y administradores para ${trainingTitle}`);
 
       res.json({
         success: true,
-        message: `Notificación de evaluación enviada al administrador (${adminEmail})`,
+        message: `Notificación de evaluación enviada a Outlook (${OUTLOOK_QUALITY_EMAIL}) y Gmail`,
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
@@ -1085,18 +1126,26 @@ async function startServer() {
       }
 
       if (mailSetup) {
-        await mailSetup.transporter.sendMail({
+        const mailOptions: any = {
           from: `"CODIAGRO Sistema Calidad" <${sender}>`,
           to: recipientEmail,
           subject,
           html: htmlContent,
-          attachments
-        });
-        console.log(`[INDIVIDUAL EVALUATION EMAIL] Justificante enviado con éxito a ${recipientEmail} para alumno ${empName} (Modo: Live SMTP)`);
+          attachments,
+          replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`
+        };
+
+        // If recipient is employee, also CC Outlook Quality mailbox so Outlook receives every record
+        if (recipientEmail.toLowerCase() !== OUTLOOK_QUALITY_EMAIL.toLowerCase()) {
+          mailOptions.cc = OUTLOOK_QUALITY_EMAIL;
+        }
+
+        await mailSetup.transporter.sendMail(mailOptions);
+        console.log(`[INDIVIDUAL EVALUATION EMAIL] Justificante enviado con éxito a ${recipientEmail} (Copia CC a Outlook: ${OUTLOOK_QUALITY_EMAIL}) para alumno ${empName}`);
         return res.json({
           success: true,
           mode: 'live_smtp',
-          message: `Justificante del cuestionario enviado correctamente a ${recipientEmail}`,
+          message: `Justificante del cuestionario enviado correctamente a ${recipientEmail} (con copia a ${OUTLOOK_QUALITY_EMAIL})`,
           recipientEmail,
           timestamp: new Date().toISOString()
         });
@@ -1365,13 +1414,15 @@ async function startServer() {
       `;
 
       if (mailSetup) {
+        const recipients = Array.from(new Set([targetEmail, OUTLOOK_QUALITY_EMAIL, GMAIL_SENDER_EMAIL].filter(Boolean)));
         await mailSetup.transporter.sendMail({
           from: `"CODIAGRO Calidad & Formación" <${sender}>`,
-          to: targetEmail,
+          to: recipients,
+          replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
           subject: `🔔 [CODIAGRO] Resumen Diario: ${pendingList.length} Cuestionario(s) de Evaluación Pendiente(s)`,
           html: emailHtml
         });
-        console.log(`[DAILY DIGEST] Enviado con éxito a ${targetEmail} con ${pendingList.length} evaluaciones pendientes.`);
+        console.log(`[DAILY DIGEST] Enviado con éxito a ${recipients.join(', ')} con ${pendingList.length} evaluaciones pendientes.`);
       } else {
         console.log(`[DAILY DIGEST - MODO SIMULADO] Se enviaría a ${targetEmail} con ${pendingList.length} pendientes.`);
       }

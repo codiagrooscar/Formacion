@@ -26,11 +26,12 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
   const employeeEmail = evaluation.employeeEmail || '';
   const trainingTitle = training?.title || evaluation.trainingTitle || 'Acción Formativa';
   const trainingCode = training?.code || evaluation.trainingCode || 'RE0180104';
-  const adminEmail = settings.adminEmail || 'formacioncodiagro@gmail.com';
+  const qualityOutlookEmail = 'alma.trilles@codiagro.com';
+  const senderGmail = settings.smtpUser || 'formacioncodiagro@gmail.com';
 
   const defaultRecipientType = employeeEmail ? 'student' : 'admin';
   const [recipientType, setRecipientType] = useState<'student' | 'admin' | 'custom'>(defaultRecipientType);
-  const [customEmail, setCustomEmail] = useState<string>(employeeEmail || adminEmail);
+  const [customEmail, setCustomEmail] = useState<string>(employeeEmail || qualityOutlookEmail);
   const [subject, setSubject] = useState<string>(
     `📋 [CODIAGRO] Justificante Evaluación: ${employeeName} - ${trainingTitle}`
   );
@@ -39,7 +40,7 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
 
   // SMTP Password & Configuration Assistant State
   const [showSmtpConfig, setShowSmtpConfig] = useState<boolean>(false);
-  const [smtpUser, setSmtpUser] = useState<string>(settings.smtpUser || adminEmail);
+  const [smtpUser, setSmtpUser] = useState<string>(senderGmail);
   const [smtpPass, setSmtpPass] = useState<string>(settings.smtpPass || '');
   const [isSavingSmtp, setIsSavingSmtp] = useState<boolean>(false);
   const [copiedText, setCopiedText] = useState<boolean>(false);
@@ -56,7 +57,7 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
     recipientType === 'student' 
       ? (employeeEmail || customEmail) 
       : recipientType === 'admin' 
-      ? adminEmail 
+      ? qualityOutlookEmail 
       : customEmail;
 
   const handleSaveSmtpPassword = async () => {
@@ -130,13 +131,13 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
           pdfBase64,
           settings: {
             ...settings,
-            smtpUser: smtpUser.trim() || settings.smtpUser || adminEmail,
+            smtpUser: smtpUser.trim() || settings.smtpUser || senderGmail,
             smtpPass: activePass
           },
           smtpConfig: {
             host: settings.smtpHost || 'smtp.gmail.com',
             port: settings.smtpPort || 465,
-            user: smtpUser.trim() || settings.smtpUser || adminEmail,
+            user: smtpUser.trim() || settings.smtpUser || senderGmail,
             pass: activePass
           }
         })
@@ -394,7 +395,7 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
                 type="button"
                 onClick={() => {
                   setRecipientType('admin');
-                  setCustomEmail(adminEmail);
+                  setCustomEmail(qualityOutlookEmail);
                 }}
                 className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition cursor-pointer flex flex-col justify-between ${
                   recipientType === 'admin'
@@ -402,8 +403,8 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
                     : 'bg-[#0A1220] border-[#1A2B44] text-slate-400 hover:bg-[#182840]'
                 }`}
               >
-                <span className="font-bold text-white text-[11px]">🏢 Calidad / RRHH</span>
-                <span className="text-[10px] truncate text-slate-300">{adminEmail}</span>
+                <span className="font-bold text-white text-[11px]">🏢 Calidad / Outlook</span>
+                <span className="text-[10px] truncate text-slate-300">{qualityOutlookEmail}</span>
               </button>
 
               <button

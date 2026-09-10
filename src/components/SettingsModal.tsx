@@ -62,11 +62,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   
   const sanitizeSettings = (raw: CompanySettings): CompanySettings => ({
     ...raw,
-    adminEmail: (raw.adminEmail === 'alma.trilles@codiagro.com' || raw.adminEmail === 'codiagrooscar@gmail.com' || !raw.adminEmail) ? 'formacioncodiagro@gmail.com' : raw.adminEmail,
-    smtpUser: (raw.smtpUser === 'alma.trilles@codiagro.com' || raw.smtpUser === 'codiagrooscar@gmail.com' || !raw.smtpUser) ? 'formacioncodiagro@gmail.com' : raw.smtpUser,
-    smtpHost: (raw.smtpHost === 'smtp.office365.com' || !raw.smtpHost) ? 'smtp.gmail.com' : raw.smtpHost,
-    smtpPort: (raw.smtpPort === 587 || !raw.smtpPort) ? 465 : raw.smtpPort,
-    smtpPass: (raw.smtpPass === '1Ujhg23n' || !raw.smtpPass) ? '' : raw.smtpPass,
+    adminEmail: raw.adminEmail || 'formacioncodiagro@gmail.com',
+    smtpUser: raw.smtpUser || raw.adminEmail || 'formacioncodiagro@gmail.com',
+    smtpHost: raw.smtpHost || 'smtp.gmail.com',
+    smtpPort: raw.smtpPort || 465,
+    smtpPass: raw.smtpPass || '',
     emailNotificationEnabled: raw.emailNotificationEnabled ?? true,
     pushNotificationEnabled: raw.pushNotificationEnabled ?? true,
     dailyPendingDigestEnabled: raw.dailyPendingDigestEnabled ?? true,
@@ -1345,20 +1345,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Servidor de Envío de Correos (Outlook / Office 365 / Gmail / SMTP)</span>
+                    <span>Flujo Oficial de Correos: Salida Gmail &rarr; Reenvío Automático a Outlook</span>
                   </div>
                   <span className="text-[11px] text-slate-400 font-mono">Remitente: {formData.smtpUser || formData.adminEmail || 'formacioncodiagro@gmail.com'}</span>
                 </div>
 
-                <p className="text-xs text-slate-300">
-                  Configuración para el envío automático de convocatorias oficiales a los trabajadores y avisos de nuevas evaluaciones completadas.
-                </p>
+                {/* Email Flow Banner */}
+                <div className="bg-[#101C2E] p-3.5 rounded-xl border border-emerald-500/20 text-xs text-slate-300 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <Mail className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-emerald-300">Arquitectura de Notificaciones y Reenvío Automático:</p>
+                      <ul className="list-disc list-inside text-[11px] text-slate-300 mt-1 space-y-1">
+                        <li><strong>Cuenta Emisora Principal (Gmail):</strong> <span className="font-mono text-emerald-300 font-bold">{formData.smtpUser || 'formacioncodiagro@gmail.com'}</span> (desde donde salen las convocatorias oficiales, recordatorios y justificantes).</li>
+                        <li><strong>Buzón de Calidad (Outlook):</strong> <span className="font-mono text-cyan-300 font-bold">alma.trilles@codiagro.com</span> (recibe copia y reenvío automático de todos los avisos, respuestas y justificantes firmados).</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Direct SMTP Inputs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#101C2E] p-4 rounded-xl border border-[#1A2B44]">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Servidor SMTP
+                      Servidor SMTP Emisor
                     </label>
                     <input
                       type="text"
@@ -1384,7 +1394,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Usuario Remitente (Gmail / Outlook / SMTP)
+                      Usuario Remitente (Gmail)
                     </label>
                     <input
                       type="email"
@@ -1398,16 +1408,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div>
                     <label className="block text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-1 flex items-center gap-1">
                       <Key className="w-3 h-3 text-amber-400" />
-                      Contraseña de Buzón / Aplicación *
+                      Contraseña de Aplicación de Google (16 caracteres) *
                     </label>
                     <input
                       type="password"
                       value={formData.smtpPass || ''}
                       onChange={(e) => setFormData({ ...formData, smtpPass: e.target.value })}
-                      placeholder="Introduce la contraseña de correo o clave de app"
+                      placeholder="Introduce la contraseña de 16 caracteres generada en Google"
                       className="w-full bg-[#0A1220] border border-amber-500/40 rounded-xl px-3 py-2 text-emerald-300 text-xs font-mono focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                     />
                   </div>
+                </div>
+
+                {/* Google App Password Help Box */}
+                <div className="bg-[#0b1626] p-3.5 rounded-xl border border-[#243a5e] text-xs text-slate-300 space-y-1.5">
+                  <p className="font-bold text-slate-200 flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-amber-400" />
+                    ¿Cómo obtener la contraseña de aplicación de Gmail para <span className="text-emerald-300 font-mono">formacioncodiagro@gmail.com</span>?
+                  </p>
+                  <ol className="list-decimal list-inside text-[11px] text-slate-400 space-y-1 leading-relaxed pl-1">
+                    <li>Accede a tu cuenta de Google en <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" className="text-emerald-400 underline font-semibold">myaccount.google.com/apppasswords</a>.</li>
+                    <li>Escribe un nombre identificador (ej: <span className="font-mono text-white">Codiagro Formación</span>) y haz clic en <strong>Crear</strong>.</li>
+                    <li>Copia la clave amarilla de 16 letras que aparece y pégala directamente en el campo <em>Contraseña de Aplicación</em> superior.</li>
+                  </ol>
                 </div>
 
                 <div className="bg-[#101C2E] p-3.5 rounded-xl border border-[#1A2B44] space-y-3">

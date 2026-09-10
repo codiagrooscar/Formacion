@@ -320,9 +320,29 @@ async function startServer() {
     };
   };
 
-  // Mail Transporter for Gmail / Outlook / Custom SMTP with Render-Compatible IPv4 Forcing
+  // Mail Transporter for Gmail / Outlook / Custom SMTP with Strict IPv4 Lookup for Render & Cloud
   const OUTLOOK_QUALITY_EMAIL = 'alma.trilles@codiagro.com';
   const GMAIL_SENDER_EMAIL = 'formacioncodiagro@gmail.com';
+
+  // Custom DNS lookup that strictly forces IPv4 addresses, preventing ENETUNREACH IPv6 errors in Cloud/Render
+  const ipv4Lookup = (hostname: string, options: any, callback: any) => {
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+    dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
+      if (err || !address) {
+        dns.resolve4(hostname, (rErr, addresses) => {
+          if (rErr || !addresses || addresses.length === 0) {
+            return callback(err || rErr);
+          }
+          return callback(null, addresses[0], 4);
+        });
+      } else {
+        return callback(null, address, 4);
+      }
+    });
+  };
 
   const getMailTransporter = (customConfig?: { host?: string; port?: number; user?: string; pass?: string }) => {
     const db = ensureDbFile();
@@ -354,13 +374,14 @@ async function startServer() {
     const targetHost = isGmail ? 'smtp.gmail.com' : host;
 
     const sendWithFallback = async (mailOptions: any) => {
-      // Intento 1: Puerto primario (465 SSL o el configurado) forzando IPv4 (family: 4)
+      // Intento 1: Puerto primario (465 SSL o el configurado) con resolución estricta IPv4
       try {
         const primaryTransport = nodemailer.createTransport({
           host: targetHost,
           port,
           secure: isSecure,
-          family: 4, // FORZAR IPv4 PARA EVITAR ERROR ENETUNREACH EN RENDER Y CLOUD
+          family: 4,
+          lookup: ipv4Lookup,
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
           connectionTimeout: 18000,
@@ -371,12 +392,13 @@ async function startServer() {
       } catch (primaryErr: any) {
         console.warn(`[SMTP] Fallo en intento primario (${targetHost}:${port} SSL IPv4): ${primaryErr?.message}. Probando fallback a puerto 587 (TLS IPv4)...`);
         
-        // Intento 2: Fallback a puerto 587 con STARTTLS forzando IPv4
+        // Intento 2: Fallback a puerto 587 con STARTTLS con resolución estricta IPv4
         const fallbackTransport = nodemailer.createTransport({
           host: targetHost,
           port: 587,
           secure: false, // STARTTLS
-          family: 4, // FORZAR IPv4
+          family: 4,
+          lookup: ipv4Lookup,
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
           connectionTimeout: 18000,
@@ -392,6 +414,7 @@ async function startServer() {
       port,
       secure: isSecure,
       family: 4,
+      lookup: ipv4Lookup,
       auth: { user, pass },
       tls: { rejectUnauthorized: false },
       connectionTimeout: 18000,

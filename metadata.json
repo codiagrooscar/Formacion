@@ -1,0 +1,8 @@
+{
+  "name": "CODIAGRO - Plan de Formación ISO 9001",
+  "description": "Sistema integral CODIAGRO para gestión de acciones formativas, evaluación con IA mediante cámara/archivos y cuadro de mando de KPIs conforme a ISO 9001/ISO 14001.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

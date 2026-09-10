@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "TrainingAction": {
+      "title": "TrainingAction",
+      "description": "Acción formativa del plan anual de formación ISO 9001",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 256 },
+        "category": { "type": "string", "maxLength": 64 },
+        "department": { "type": "string", "maxLength": 64 },
+        "plannedDate": { "type": "string", "maxLength": 32 },
+        "endDate": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["planned", "in_progress", "completed", "cancelled"] },
+        "modality": { "type": "string", "enum": ["presencial", "online", "hibrida"] },
+        "durationHours": { "type": "number" },
+        "totalParticipantsPlanned": { "type": "number" },
+        "totalParticipantsAttended": { "type": "number" },
+        "totalCost": { "type": "number" },
+        "isSubsidized": { "type": "boolean" },
+        "subsidyType": { "type": "string", "enum": ["amount", "percentage"] },
+        "subsidyAmount": { "type": "number" },
+        "subsidyPercentage": { "type": "number" },
+        "netCompanyCost": { "type": "number" },
+        "provider": { "type": "string", "maxLength": 128 },
+        "trainerName": { "type": "string", "maxLength": 128 },
+        "locationOrPlatform": { "type": "string", "maxLength": 128 },
+        "isoClause": { "type": "string", "maxLength": 64 },
+        "justification": { "type": "string", "maxLength": 1024 },
+        "evaluationsCount": { "type": "number" },
+        "averageSatisfaction": { "type": "number" },
+        "attendanceRate": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "code", "title", "department", "plannedDate", "status", "totalCost"]
+    },
+    "Evaluation": {
+      "title": "Evaluation",
+      "description": "Cuestionario de evaluación y satisfacción del participante ISO 9001",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "trainingActionId": { "type": "string", "maxLength": 128 },
+        "trainingCode": { "type": "string", "maxLength": 32 },
+        "trainingTitle": { "type": "string", "maxLength": 256 },
+        "employeeName": { "type": "string", "maxLength": 128 },
+        "employeeEmail": { "type": "string", "maxLength": 128 },
+        "department": { "type": "string", "maxLength": 64 },
+        "submissionDate": { "type": "string", "maxLength": 64 },
+        "submissionSource": { "type": "string", "enum": ["online_form", "scanned_paper", "camera_capture", "bulk_upload"] }
+      },
+      "required": ["id", "trainingActionId", "trainingTitle", "department", "submissionDate"]
+    },
+    "EffectivenessFollowup": {
+      "title": "EffectivenessFollowup",
+      "description": "Evaluación de eficacia de la formación en el puesto de trabajo (ISO 9001 cláusula 7.2)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "trainingActionId": { "type": "string", "maxLength": 128 },
+        "trainingTitle": { "type": "string", "maxLength": 256 },
+        "employeeName": { "type": "string", "maxLength": 128 },
+        "managerName": { "type": "string", "maxLength": 128 },
+        "evaluationDate": { "type": "string", "maxLength": 32 },
+        "periodDays": { "type": "number" },
+        "performanceImprovementRating": { "type": "number" },
+        "knowledgeApplied": { "type": "boolean" },
+        "goalsAchieved": { "type": "boolean" },
+        "comments": { "type": "string", "maxLength": 1024 },
+        "status": { "type": "string", "enum": ["pending", "completed"] }
+      },
+      "required": ["id", "trainingActionId", "trainingTitle", "employeeName", "status"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "Notificación de recepción de cuestionario para el administrador",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 256 },
+        "message": { "type": "string", "maxLength": 1024 },
+        "type": { "type": "string", "enum": ["evaluation_received", "training_scheduled", "followup_due", "system"] },
+        "trainingId": { "type": "string", "maxLength": 128 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title", "message", "type", "createdAt"]
+    },
+    "CompanySettings": {
+      "title": "CompanySettings",
+      "description": "Configuración del sistema de gestión y control documental ISO 9001",
+      "type": "object",
+      "properties": {
+        "documentCode": { "type": "string", "maxLength": 32 },
+        "documentEdition": { "type": "string", "maxLength": 16 },
+        "companyName": { "type": "string", "maxLength": 128 },
+        "adminEmail": { "type": "string", "maxLength": 128 },
+        "totalEmployees": { "type": "number" },
+        "annualTrainingBudget": { "type": "number" },
+        "targetHoursPerEmployee": { "type": "number" },
+        "targetSatisfactionScore": { "type": "number" },
+        "targetEffectivenessRate": { "type": "number" },
+        "year": { "type": "number" }
+      },
+      "required": ["documentCode", "documentEdition", "totalEmployees", "annualTrainingBudget"]
+    }
+  },
+  "firestore": {
+    "/trainings/{trainingId}": {
+      "schema": "TrainingAction",
+      "description": "Catálogo de acciones formativas y cursos"
+    },
+    "/evaluations/{evaluationId}": {
+      "schema": "Evaluation",
+      "description": "Cuestionarios de satisfacción y evaluación rellenados por los alumnos"
+    },
+    "/followups/{followupId}": {
+      "schema": "EffectivenessFollowup",
+      "description": "Seguimiento de eficacia a 30/60/90 días"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "AppNotification",
+      "description": "Registro de notificaciones y alertas en tiempo real"
+    },
+    "/settings/config": {
+      "schema": "CompanySettings",
+      "description": "Parámetros globales y control documental"
+    }
+  }
+}

@@ -1,10 +1,20 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import dns from 'dns';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import { GoogleGenAI } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+
+// Force IPv4 resolution first to prevent ENETUNREACH IPv6 routing errors on Render / Cloud platforms
+if (dns && typeof dns.setDefaultResultOrder === 'function') {
+  try {
+    dns.setDefaultResultOrder('ipv4first');
+  } catch (e) {
+    console.warn('[DNS] Could not set ipv4first:', e);
+  }
+}
 import { 
   INITIAL_TRAINING_ACTIONS, 
   INITIAL_EVALUATIONS, 
@@ -310,7 +320,7 @@ async function startServer() {
     };
   };
 
-  // Mail Transporter for Gmail (service: 'gmail') / Outlook / Custom SMTP
+  // Mail Transporter for Gmail / Outlook / Custom SMTP with Render-Compatible IPv4 Forcing
   const OUTLOOK_QUALITY_EMAIL = 'alma.trilles@codiagro.com';
   const GMAIL_SENDER_EMAIL = 'formacioncodiagro@gmail.com';
 
@@ -340,42 +350,58 @@ async function startServer() {
       return null;
     }
 
-    // For Gmail, using service: 'gmail' in Nodemailer is the most stable and robust
-    if (isGmail) {
-      return {
-        transporter: nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user,
-            pass,
-          },
-          pool: true,
-          maxConnections: 3,
-          connectionTimeout: 15000,
-          greetingTimeout: 15000,
-          socketTimeout: 20000,
-        }),
-        sender: user
-      };
-    }
+    const isSecure = (isGmail ? (port === 465) : (port === 465));
+    const targetHost = isGmail ? 'smtp.gmail.com' : host;
 
-    const isSecure = port === 465;
+    const sendWithFallback = async (mailOptions: any) => {
+      // Intento 1: Puerto primario (465 SSL o el configurado) forzando IPv4 (family: 4)
+      try {
+        const primaryTransport = nodemailer.createTransport({
+          host: targetHost,
+          port,
+          secure: isSecure,
+          family: 4, // FORZAR IPv4 PARA EVITAR ERROR ENETUNREACH EN RENDER Y CLOUD
+          auth: { user, pass },
+          tls: { rejectUnauthorized: false },
+          connectionTimeout: 18000,
+          greetingTimeout: 18000,
+          socketTimeout: 22000,
+        } as any);
+        return await primaryTransport.sendMail(mailOptions);
+      } catch (primaryErr: any) {
+        console.warn(`[SMTP] Fallo en intento primario (${targetHost}:${port} SSL IPv4): ${primaryErr?.message}. Probando fallback a puerto 587 (TLS IPv4)...`);
+        
+        // Intento 2: Fallback a puerto 587 con STARTTLS forzando IPv4
+        const fallbackTransport = nodemailer.createTransport({
+          host: targetHost,
+          port: 587,
+          secure: false, // STARTTLS
+          family: 4, // FORZAR IPv4
+          auth: { user, pass },
+          tls: { rejectUnauthorized: false },
+          connectionTimeout: 18000,
+          greetingTimeout: 18000,
+          socketTimeout: 22000,
+        } as any);
+        return await fallbackTransport.sendMail(mailOptions);
+      }
+    };
+
+    const mainTransporter = nodemailer.createTransport({
+      host: targetHost,
+      port,
+      secure: isSecure,
+      family: 4,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 18000,
+      greetingTimeout: 18000,
+      socketTimeout: 22000,
+    } as any);
+
     return {
-      transporter: nodemailer.createTransport({
-        host,
-        port,
-        secure: isSecure,
-        auth: {
-          user,
-          pass,
-        },
-        tls: {
-          rejectUnauthorized: false
-        },
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 20000,
-      }),
+      transporter: mainTransporter,
+      sendEmail: sendWithFallback,
       sender: user
     };
   };
@@ -410,10 +436,8 @@ async function startServer() {
         });
       }
 
-      const { transporter } = mailSetup;
-
       const testRecipients = Array.from(new Set([targetEmail, OUTLOOK_QUALITY_EMAIL].filter(Boolean)));
-      await transporter.sendMail({
+      await mailSetup.sendEmail({
         from: `"CODIAGRO Formación & Calidad" <${sender}>`,
         to: targetEmail,
         cc: targetEmail.toLowerCase() !== OUTLOOK_QUALITY_EMAIL.toLowerCase() ? OUTLOOK_QUALITY_EMAIL : undefined,
@@ -607,7 +631,7 @@ async function startServer() {
           ];
         }
 
-        await mailSetup.transporter.sendMail(mailOptions);
+        await mailSetup.sendEmail(mailOptions);
 
         console.log(`[CONVOCATION EMAIL] Enviado con éxito a: ${to} (Copia a Outlook: ${OUTLOOK_QUALITY_EMAIL})${syllabusAttachment ? ' con temario PDF adjunto' : ''}`);
         return res.json({
@@ -770,7 +794,7 @@ async function startServer() {
           ];
         }
 
-        await mailSetup.transporter.sendMail(mailOptions);
+        await mailSetup.sendEmail(mailOptions);
 
         console.log(`[EVALUATION EMAIL] Enviado con éxito a: ${to} (Copia a Outlook: ${OUTLOOK_QUALITY_EMAIL}, PDF adjunto: ${!!pdfAttachment})`);
         return res.json({
@@ -923,7 +947,7 @@ async function startServer() {
           GMAIL_SENDER_EMAIL
         ].filter(Boolean)));
 
-        await mailSetup.transporter.sendMail({
+        await mailSetup.sendEmail({
           from: `"CODIAGRO Sistema Calidad" <${sender}>`,
           to: adminRecipients,
           replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
@@ -1140,7 +1164,7 @@ async function startServer() {
           mailOptions.cc = OUTLOOK_QUALITY_EMAIL;
         }
 
-        await mailSetup.transporter.sendMail(mailOptions);
+        await mailSetup.sendEmail(mailOptions);
         console.log(`[INDIVIDUAL EVALUATION EMAIL] Justificante enviado con éxito a ${recipientEmail} (Copia CC a Outlook: ${OUTLOOK_QUALITY_EMAIL}) para alumno ${empName}`);
         return res.json({
           success: true,
@@ -1415,7 +1439,7 @@ async function startServer() {
 
       if (mailSetup) {
         const recipients = Array.from(new Set([targetEmail, OUTLOOK_QUALITY_EMAIL, GMAIL_SENDER_EMAIL].filter(Boolean)));
-        await mailSetup.transporter.sendMail({
+        await mailSetup.sendEmail({
           from: `"CODIAGRO Calidad & Formación" <${sender}>`,
           to: recipients,
           replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,

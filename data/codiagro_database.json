@@ -1,94 +1,79 @@
 {
   "trainings": [
     {
-      "trainerName": "Formador Especialista",
-      "plannedDate": "2026-05-11",
-      "attendees": [
-        {
-          "email": "alma.trilles@codiagro.com",
-          "name": "Alma Trilles",
-          "evaluationId": "eval-1788938455740",
-          "completedAt": "2026-09-09T07:20:57.831Z",
-          "department": "Toda la Empresa",
-          "hasCompletedEvaluation": true,
-          "id": "att-1788518289583"
-        },
-        {
-          "department": "Toda la Empresa",
-          "name": "Raquel Navarro Corredor",
-          "email": "raquel.navarro@codiagro.com",
-          "id": "att-1788518296633"
-        },
-        {
-          "department": "Toda la Empresa",
-          "name": "Ivan Suesta Edo",
-          "email": "ivan.suesta@codiagro.com",
-          "id": "att-1788518348027"
-        },
-        {
-          "email": "antonio.andreu@codiagro.com",
-          "department": "Toda la Empresa",
-          "name": "Antonio Andreu Selma",
-          "id": "att-1788518369367"
-        }
-      ],
-      "averageSatisfaction": 3.31,
       "isoClause": "7.2 Competencia",
-      "isSubsidized": false,
-      "createdAt": "2026-09-04T10:39:49.805Z",
-      "id": "act-1788518389805",
-      "endDate": "2026-05-17",
-      "isEffective": false,
-      "trainingCenter": "JOB DIGITAL NETWORK",
-      "category": "Calidad e ISO",
-      "provider": "JOB DIGITAL NETWORK",
-      "notes": "",
-      "totalCost": 22,
       "netCompanyCost": 22,
+      "department": "Toda la Empresa",
+      "plannedDate": "2026-05-11",
+      "trainingCenter": "JOB DIGITAL NETWORK",
+      "totalParticipantsPlanned": 4,
       "code": "26011",
+      "provider": "JOB DIGITAL NETWORK",
+      "isSubsidized": false,
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
       "subsidyAmount": 0,
+      "createdAt": "2026-09-04T10:39:49.805Z",
+      "modality": "online",
       "targetCompetencies": [
         "Auditoría Interna ISO 9001/14001"
       ],
       "evaluationsCount": 3,
-      "durationHours": 8,
-      "modality": "online",
+      "attendees": [
+        {
+          "email": "alma.trilles@codiagro.com",
+          "completedAt": "2026-09-09T07:20:57.831Z",
+          "name": "Alma Trilles",
+          "id": "att-1788518289583",
+          "hasCompletedEvaluation": true,
+          "department": "Toda la Empresa",
+          "evaluationId": "eval-1788938455740"
+        },
+        {
+          "name": "Raquel Navarro Corredor",
+          "email": "raquel.navarro@codiagro.com",
+          "department": "Toda la Empresa",
+          "id": "att-1788518296633"
+        },
+        {
+          "id": "att-1788518348027",
+          "name": "Ivan Suesta Edo",
+          "email": "ivan.suesta@codiagro.com",
+          "department": "Toda la Empresa"
+        },
+        {
+          "name": "Antonio Andreu Selma",
+          "email": "antonio.andreu@codiagro.com",
+          "department": "Toda la Empresa",
+          "id": "att-1788518369367"
+        }
+      ],
       "justification": "Nuevo reglamente europeo Proteccion de Datos, régimen de infracciones y sanciones.",
-      "subsidyPercentage": 0,
-      "department": "Toda la Empresa",
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "attendanceRate": 75,
+      "notes": "",
+      "durationHours": 8,
       "status": "completed",
-      "totalParticipantsAttended": 3,
+      "id": "act-1788518389805",
+      "trainerName": "Formador Especialista",
+      "endDate": "2026-05-17",
+      "subsidyPercentage": 0,
+      "category": "Calidad e ISO",
+      "title": "PROTECCION DE DATOS",
+      "averageSatisfaction": 3.31,
+      "attendanceRate": 75,
+      "isEffective": false,
       "effectivenessScore": 60,
-      "totalParticipantsPlanned": 4,
       "subsidyType": "percentage",
-      "title": "PROTECCION DE DATOS"
+      "totalParticipantsAttended": 3,
+      "totalCost": 22
     },
     {
-      "durationHours": 2,
+      "targetCompetencies": [
+        "Auditoría Interna ISO 9001/14001"
+      ],
+      "evaluationsCount": 3,
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
       "subsidyAmount": 0,
-      "provider": "UNIMAT PREVENCION,S.L.",
-      "category": "Calidad e ISO",
-      "subsidyPercentage": 100,
-      "justification": "Formación preventiva por reciente incorporación a la empresa",
-      "isEffective": false,
-      "totalParticipantsPlanned": 4,
-      "modality": "online",
-      "id": "act-1788759493950",
-      "totalCost": 0,
-      "endDate": "2026-04-09",
       "status": "completed",
-      "plannedDate": "2026-04-09",
-      "trainerName": "Formador Especialista",
-      "department": "Toda la Empresa",
-      "effectivenessScore": 53,
-      "code": "26012",
-      "subsidyType": "percentage",
-      "isoClause": "7.2 Competencia",
-      "title": "CURSO INICIAL SEGURIDAD Y SALUD  ",
-      "isSubsidized": false,
-      "attendanceRate": 75,
+      "category": "Calidad e ISO",
       "attendees": [
         {
           "email": "oscar.ocampo@codiagro.com",
@@ -98,152 +83,169 @@
         },
         {
           "department": "Toda la Empresa",
-          "name": "Raquel Navarro Corredor",
           "id": "att-1788759367683",
-          "email": "raquel.navarro@codiagro.com"
+          "email": "raquel.navarro@codiagro.com",
+          "name": "Raquel Navarro Corredor"
         },
         {
-          "email": "pere.porta@codiagro.com",
           "id": "att-1788759425242",
+          "email": "pere.porta@codiagro.com",
           "name": "Pere Porta Sanuy",
           "department": "Toda la Empresa"
         },
         {
-          "email": "samuelcazaypesca@gmail.com",
+          "id": "att-1788759454822",
+          "hasCompletedEvaluation": true,
           "name": "Samuel Ariño Almela",
           "department": "Toda la Empresa",
-          "id": "att-1788759454822",
-          "hasCompletedEvaluation": true
+          "email": "samuelcazaypesca@gmail.com"
         }
       ],
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "averageSatisfaction": 3.31,
-      "targetCompetencies": [
-        "Auditoría Interna ISO 9001/14001"
-      ],
-      "trainingCenter": "UNIMAT PREVENCION,S.L.",
-      "evaluationsCount": 3,
-      "totalParticipantsAttended": 3,
-      "notes": "",
       "createdAt": "2026-09-07T05:38:13.950Z",
-      "netCompanyCost": 0
+      "trainingCenter": "UNIMAT PREVENCION,S.L.",
+      "isoClause": "7.2 Competencia",
+      "totalParticipantsAttended": 3,
+      "netCompanyCost": 0,
+      "plannedDate": "2026-04-09",
+      "totalParticipantsPlanned": 4,
+      "isEffective": false,
+      "id": "act-1788759493950",
+      "subsidyType": "percentage",
+      "subsidyPercentage": 100,
+      "totalCost": 0,
+      "effectivenessScore": 53,
+      "endDate": "2026-04-09",
+      "attendanceRate": 75,
+      "isSubsidized": false,
+      "durationHours": 2,
+      "provider": "UNIMAT PREVENCION,S.L.",
+      "averageSatisfaction": 3.31,
+      "code": "26012",
+      "justification": "Formación preventiva por reciente incorporación a la empresa",
+      "notes": "",
+      "trainerName": "Formador Especialista",
+      "title": "CURSO INICIAL SEGURIDAD Y SALUD  ",
+      "department": "Toda la Empresa",
+      "modality": "online"
     },
     {
+      "netCompanyCost": 484,
+      "provider": "Cámara de Comercio de Castellón",
+      "endDate": "2026-03-31",
+      "subsidyAmount": 484,
+      "trainingCenter": "Cámara de Comercio de Castellón",
+      "totalCost": 484,
       "trainerName": "Formador Especialista",
+      "modality": "presencial",
+      "code": "26013",
+      "title": "PROTOCOLO DESCONEXIÓN DIGITAL Y ACOSO LABORAL/ SEXUAL",
+      "totalParticipantsAttended": 0,
+      "evaluationsCount": 0,
+      "subsidyType": "percentage",
+      "notes": "",
+      "status": "planned",
       "plannedDate": "2026-03-31",
+      "totalParticipantsPlanned": 23,
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
+      "createdAt": "2026-09-07T05:45:30.941Z",
       "targetCompetencies": [
         "Auditoría Interna ISO 9001/14001"
       ],
-      "isSubsidized": false,
-      "notes": "",
-      "totalCost": 484,
-      "attendanceRate": 0,
-      "code": "26013",
-      "totalParticipantsAttended": 0,
-      "id": "act-1788759930941",
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "subsidyPercentage": 100,
-      "trainingCenter": "Cámara de Comercio de Castellón",
-      "netCompanyCost": 484,
-      "title": "PROTOCOLO DESCONEXIÓN DIGITAL Y ACOSO LABORAL/ SEXUAL",
-      "status": "planned",
-      "isoClause": "7.2 Competencia",
-      "department": "Toda la Empresa",
       "attendees": [
         {
-          "department": "Comercial y Asesoramiento Técnico",
           "name": "Irene García Clemente",
-          "id": "emp-1788507763113",
-          "email": "igarcia@codiagro.com"
+          "department": "Comercial y Asesoramiento Técnico",
+          "email": "igarcia@codiagro.com",
+          "id": "emp-1788507763113"
         },
         {
           "department": "Comercial y Asesoramiento Técnico",
+          "email": "jagarcia@codiagro.com",
           "name": "Juan Antonio García Sánchez",
-          "id": "emp-1788507791866",
-          "email": "jagarcia@codiagro.com"
+          "id": "emp-1788507791866"
         },
         {
-          "name": "Ricardo Pérez-Santamarina Ferrer",
+          "department": "Comercial y Asesoramiento Técnico",
           "email": "rpsf@codiagro.com",
-          "department": "Comercial y Asesoramiento Técnico",
-          "id": "emp-1788507823751"
+          "id": "emp-1788507823751",
+          "name": "Ricardo Pérez-Santamarina Ferrer"
         },
         {
-          "id": "emp-1788507865439",
           "department": "Comercial y Asesoramiento Técnico",
+          "id": "emp-1788507865439",
           "name": "Javier Paredes Martínez",
           "email": "jparedes@codiagro.com"
         },
         {
-          "department": "Toda la Empresa",
-          "name": "Alma Trilles",
+          "email": "alma.trilles@codiagro.com",
           "id": "att-1788759773756",
-          "email": "alma.trilles@codiagro.com"
+          "department": "Toda la Empresa",
+          "name": "Alma Trilles"
         },
         {
-          "id": "att-1788759781547",
           "name": "Ivan Suesta Edo",
+          "id": "att-1788759781547",
           "department": "Toda la Empresa",
           "email": "ivan.suesta@codiagro.com"
         },
         {
-          "id": "att-1788759785445",
           "name": "Óscar Ocampo Otero",
           "department": "Toda la Empresa",
+          "id": "att-1788759785445",
           "email": "oscar.ocampo@codiagro.com"
         },
         {
           "id": "att-1788759788701",
+          "email": "manuel.flor@codiagro.com",
           "department": "Toda la Empresa",
-          "name": "Manuel Flor Aznar",
-          "email": "manuel.flor@codiagro.com"
+          "name": "Manuel Flor Aznar"
         },
         {
-          "email": "javier.edo@codiagro.com",
-          "id": "att-1788759791394",
           "department": "Toda la Empresa",
+          "id": "att-1788759791394",
+          "email": "javier.edo@codiagro.com",
           "name": "Javier Edo Bou"
         },
         {
+          "id": "att-1788759799321",
           "department": "Toda la Empresa",
           "email": "antonio.andreu@codiagro.com",
-          "name": "Antonio Andreu Selma",
-          "id": "att-1788759799321"
+          "name": "Antonio Andreu Selma"
         },
         {
+          "department": "Toda la Empresa",
           "id": "att-1788759805760",
           "name": "Pere Porta Sanuy",
-          "department": "Toda la Empresa",
           "email": "pere.porta@codiagro.com"
         },
         {
-          "name": "Esther Varas Rubiano",
           "id": "att-1788759809872",
           "email": "esther.varas@codiagro.com",
+          "name": "Esther Varas Rubiano",
           "department": "Toda la Empresa"
         },
         {
-          "department": "Toda la Empresa",
-          "email": "jaime.moro@codiagro.com",
           "name": "Jaime Moro Amores",
-          "id": "att-1788759812625"
+          "department": "Toda la Empresa",
+          "id": "att-1788759812625",
+          "email": "jaime.moro@codiagro.com"
         },
         {
-          "email": "esther.varas@codiagro.com",
-          "department": "Toda la Empresa",
           "id": "att-1788759818069",
-          "name": "Esther Varas Rubiano"
+          "name": "Esther Varas Rubiano",
+          "department": "Toda la Empresa",
+          "email": "esther.varas@codiagro.com"
         },
         {
           "department": "Toda la Empresa",
+          "name": "Marcos Ariel Lombardo",
           "id": "att-1788759831441",
-          "email": "marcos.lombardo@codiagro.com",
-          "name": "Marcos Ariel Lombardo"
+          "email": "marcos.lombardo@codiagro.com"
         },
         {
+          "email": "raquel.navarro@codiagro.com",
           "name": "Raquel Navarro Corredor",
           "department": "Toda la Empresa",
-          "email": "raquel.navarro@codiagro.com",
           "id": "att-1788759843868"
         },
         {
@@ -253,88 +255,223 @@
           "department": "Toda la Empresa"
         },
         {
+          "id": "att-1788759856307",
           "name": "Eva Romero Carrión",
           "email": "eva.romero@codiagro.com",
-          "department": "Toda la Empresa",
-          "id": "att-1788759856307"
+          "department": "Toda la Empresa"
         },
         {
-          "id": "att-1788759860717",
-          "name": "Cristian Gonzalez Úbeda",
           "email": "xiticabanes@gmail.com",
-          "department": "Toda la Empresa"
-        },
-        {
-          "name": "Samuel Ariño Almela",
-          "id": "att-1788759885277",
-          "email": "samuelcazaypesca@gmail.com",
-          "department": "Toda la Empresa"
-        },
-        {
+          "id": "att-1788759860717",
           "department": "Toda la Empresa",
+          "name": "Cristian Gonzalez Úbeda"
+        },
+        {
+          "email": "samuelcazaypesca@gmail.com",
+          "name": "Samuel Ariño Almela",
+          "department": "Toda la Empresa",
+          "id": "att-1788759885277"
+        },
+        {
+          "name": "Daniel Cabeza Ramirez",
           "id": "att-1788759890343",
           "email": "danielcabezaramirez@gmail.com",
-          "name": "Daniel Cabeza Ramirez"
+          "department": "Toda la Empresa"
         },
         {
-          "id": "att-1788759896174",
-          "email": "alma.trilles@codiagro.com",
           "name": "Alecu colica",
-          "department": "Toda la Empresa"
+          "department": "Toda la Empresa",
+          "email": "alma.trilles@codiagro.com",
+          "id": "att-1788759896174"
         },
         {
-          "name": "Alejandro Castillo Prades",
           "email": "alecaspr@gmail.com",
-          "id": "att-1788759900133",
-          "department": "Toda la Empresa"
+          "name": "Alejandro Castillo Prades",
+          "department": "Toda la Empresa",
+          "id": "att-1788759900133"
         }
       ],
-      "evaluationsCount": 0,
-      "endDate": "2026-03-31",
-      "provider": "Cámara de Comercio de Castellón",
+      "isoClause": "7.2 Competencia",
       "justification": "Formación protocolos de desconexión digital y acoso laboral/sexual para correcta implantación.\n",
-      "category": "Calidad e ISO",
+      "department": "Toda la Empresa",
+      "subsidyPercentage": 100,
+      "attendanceRate": 0,
       "durationHours": 2,
-      "subsidyAmount": 484,
-      "totalParticipantsPlanned": 23,
-      "subsidyType": "percentage",
-      "modality": "presencial",
-      "createdAt": "2026-09-07T05:45:30.941Z"
+      "isSubsidized": false,
+      "id": "act-1788759930941",
+      "category": "Calidad e ISO"
     },
     {
-      "totalParticipantsAttended": 0,
-      "code": "26014",
-      "endDate": "2026-09-07",
-      "justification": "Mejora competencias digitales",
-      "modality": "online",
-      "durationHours": 8,
+      "status": "planned",
       "subsidyAmount": 225,
+      "attendanceRate": 0,
+      "code": "26014",
+      "subsidyType": "percentage",
+      "endDate": "2026-09-07",
+      "trainerName": "Formador Especialista",
       "totalCost": 250,
-      "provider": "Cámara de Comercio de Castellón",
-      "category": "Calidad e ISO",
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "notes": "",
       "evaluationsCount": 0,
       "targetCompetencies": [
         "Auditoría Interna ISO 9001/14001"
       ],
-      "subsidyType": "percentage",
-      "title": "EXCEL NIVEL I",
+      "totalParticipantsPlanned": 7,
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
+      "subsidyPercentage": 90,
+      "category": "Calidad e ISO",
       "isoClause": "7.2 Competencia",
+      "title": "EXCEL NIVEL I",
       "id": "act-1788760334439",
+      "provider": "Cámara de Comercio de Castellón",
+      "modality": "online",
+      "totalParticipantsAttended": 0,
+      "notes": "",
       "netCompanyCost": 25,
+      "isSubsidized": true,
+      "justification": "Mejora competencias digitales",
+      "trainingCenter": "Cámara de Comercio de Castellón",
+      "department": "Toda la Empresa",
       "attendees": [
         {
-          "id": "emp-1788507763113",
-          "name": "Irene García Clemente",
+          "department": "Comercial y Asesoramiento Técnico",
           "email": "igarcia@codiagro.com",
-          "department": "Comercial y Asesoramiento Técnico"
+          "id": "emp-1788507763113",
+          "name": "Irene García Clemente"
         },
         {
           "id": "emp-1788507791866",
           "department": "Comercial y Asesoramiento Técnico",
+          "email": "jagarcia@codiagro.com",
+          "name": "Juan Antonio García Sánchez"
+        },
+        {
+          "email": "rpsf@codiagro.com",
+          "name": "Ricardo Pérez-Santamarina Ferrer",
+          "id": "emp-1788507823751",
+          "department": "Comercial y Asesoramiento Técnico"
+        },
+        {
+          "department": "Comercial y Asesoramiento Técnico",
+          "name": "Javier Paredes Martínez",
+          "email": "jparedes@codiagro.com",
+          "id": "emp-1788507865439"
+        },
+        {
+          "name": "Ivan Suesta Edo",
+          "id": "att-1788760266347",
+          "email": "ivan.suesta@codiagro.com",
+          "department": "Toda la Empresa"
+        },
+        {
+          "email": "antonio.andreu@codiagro.com",
+          "department": "Toda la Empresa",
+          "name": "Antonio Andreu Selma",
+          "id": "att-1788760275584"
+        },
+        {
+          "name": "Esther Varas Rubiano",
+          "id": "att-1788760283492",
+          "department": "Toda la Empresa",
+          "email": "esther.varas@codiagro.com"
+        }
+      ],
+      "durationHours": 8,
+      "createdAt": "2026-09-07T05:52:14.439Z",
+      "plannedDate": "2026-09-07"
+    },
+    {
+      "code": "26015",
+      "modality": "presencial",
+      "department": "Toda la Empresa",
+      "totalCost": 0,
+      "provider": "BUSSINES +",
+      "trainerName": "Formador Especialista",
+      "netCompanyCost": 0,
+      "justification": "Reforzar liderazgo, mejorar comunicación equipos y la gestión del cambio, y alineará KPIs entre Planta, RRHH e IT",
+      "durationHours": 8,
+      "status": "planned",
+      "trainingCenter": "BUSSINES +",
+      "endDate": "2026-03-24",
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
+      "subsidyType": "percentage",
+      "targetCompetencies": [
+        "Auditoría Interna ISO 9001/14001"
+      ],
+      "isSubsidized": false,
+      "title": "Liderando la Transformación Organizacional",
+      "subsidyPercentage": 100,
+      "plannedDate": "2026-03-24",
+      "attendanceRate": 0,
+      "subsidyAmount": 0,
+      "attendees": [
+        {
+          "email": "manuel.flor@codiagro.com",
+          "id": "emp-1788507413019",
+          "department": "Dirección de Operaciones",
+          "name": "Manuel Flor Aznar"
+        },
+        {
+          "email": "alma.trilles@codiagro.com",
+          "name": "ALMA TRILLES",
+          "id": "att-1788939380540",
+          "department": "Toda la Empresa"
+        }
+      ],
+      "createdAt": "2026-09-09T07:35:43.686Z",
+      "notes": "",
+      "isoClause": "7.2 Competencia",
+      "category": "Calidad e ISO",
+      "totalParticipantsAttended": 0,
+      "evaluationsCount": 0,
+      "totalParticipantsPlanned": 2,
+      "id": "act-1788939343686"
+    },
+    {
+      "plannedDate": "2026-03-16",
+      "title": "PLANIFICACION Y GESTION DE RECURSOS HUMANOS",
+      "notes": "",
+      "code": "26016",
+      "effectivenessScore": 80,
+      "subsidyAmount": 248,
+      "status": "completed",
+      "attendanceRate": 17,
+      "totalCost": 248,
+      "category": "Calidad e ISO",
+      "netCompanyCost": 0,
+      "isoClause": "7.2 Competencia",
+      "isSubsidized": true,
+      "provider": "AUDIO GIL FORMACIÓN",
+      "id": "act-1788939735339",
+      "trainerName": "Formador Especialista",
+      "modality": "online",
+      "justification": "formación para profesionalización del area de RRHH",
+      "subsidyPercentage": 100,
+      "trainingCenter": "AUDIO GIL FORMACIÓN",
+      "durationHours": 80,
+      "department": "RRHH",
+      "totalParticipantsPlanned": 6,
+      "evaluationsCount": 1,
+      "subsidyType": "amount",
+      "targetCompetencies": [
+        "Auditoría Interna ISO 9001/14001"
+      ],
+      "attendees": [
+        {
+          "id": "emp-1788507265026",
+          "email": "marta.roca@codiagro.com",
+          "name": "Marta Roca López",
+          "department": "Comercial y Asesoramiento Técnico"
+        },
+        {
+          "id": "emp-1788507763113",
+          "email": "igarcia@codiagro.com",
+          "department": "Comercial y Asesoramiento Técnico",
+          "name": "Irene García Clemente"
+        },
+        {
+          "email": "jagarcia@codiagro.com",
           "name": "Juan Antonio García Sánchez",
-          "email": "jagarcia@codiagro.com"
+          "id": "emp-1788507791866",
+          "department": "Comercial y Asesoramiento Técnico"
         },
         {
           "name": "Ricardo Pérez-Santamarina Ferrer",
@@ -349,202 +486,65 @@
           "id": "emp-1788507865439"
         },
         {
-          "department": "Toda la Empresa",
-          "name": "Ivan Suesta Edo",
-          "email": "ivan.suesta@codiagro.com",
-          "id": "att-1788760266347"
-        },
-        {
-          "email": "antonio.andreu@codiagro.com",
-          "name": "Antonio Andreu Selma",
-          "department": "Toda la Empresa",
-          "id": "att-1788760275584"
-        },
-        {
-          "department": "Toda la Empresa",
-          "id": "att-1788760283492",
-          "email": "esther.varas@codiagro.com",
-          "name": "Esther Varas Rubiano"
+          "name": "Pedro Javier Medina Bernal",
+          "id": "emp-1788508141787",
+          "email": "pjmedina@codiagro.com",
+          "department": "Comercial y Asesoramiento Técnico"
         }
       ],
-      "plannedDate": "2026-09-07",
-      "trainerName": "Formador Especialista",
-      "trainingCenter": "Cámara de Comercio de Castellón",
-      "subsidyPercentage": 90,
-      "attendanceRate": 0,
-      "createdAt": "2026-09-07T05:52:14.439Z",
-      "status": "planned",
-      "isSubsidized": true,
-      "totalParticipantsPlanned": 7,
-      "department": "Toda la Empresa"
-    },
-    {
-      "plannedDate": "2026-03-24",
-      "trainerName": "Formador Especialista",
-      "attendees": [
-        {
-          "email": "manuel.flor@codiagro.com",
-          "name": "Manuel Flor Aznar",
-          "department": "Dirección de Operaciones",
-          "id": "emp-1788507413019"
-        },
-        {
-          "department": "Toda la Empresa",
-          "id": "att-1788939380540",
-          "name": "ALMA TRILLES",
-          "email": "alma.trilles@codiagro.com"
-        }
-      ],
-      "isoClause": "7.2 Competencia",
-      "isSubsidized": false,
-      "createdAt": "2026-09-09T07:35:43.686Z",
-      "id": "act-1788939343686",
-      "endDate": "2026-03-24",
-      "trainingCenter": "BUSSINES +",
-      "category": "Calidad e ISO",
-      "provider": "BUSSINES +",
-      "notes": "",
-      "totalCost": 0,
-      "code": "26015",
-      "netCompanyCost": 0,
-      "subsidyAmount": 0,
-      "targetCompetencies": [
-        "Auditoría Interna ISO 9001/14001"
-      ],
-      "durationHours": 8,
-      "evaluationsCount": 0,
-      "modality": "presencial",
-      "justification": "Reforzar liderazgo, mejorar comunicación equipos y la gestión del cambio, y alineará KPIs entre Planta, RRHH e IT",
-      "subsidyPercentage": 100,
-      "department": "Toda la Empresa",
+      "averageSatisfaction": 4,
       "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "attendanceRate": 0,
-      "status": "planned",
-      "totalParticipantsAttended": 0,
-      "totalParticipantsPlanned": 2,
-      "title": "Liderando la Transformación Organizacional",
-      "subsidyType": "percentage"
+      "totalParticipantsAttended": 1,
+      "endDate": "2026-03-16",
+      "createdAt": "2026-09-09T07:42:15.339Z",
+      "isEffective": true
     },
     {
       "averageSatisfaction": 4,
-      "effectivenessScore": 80,
-      "totalParticipantsAttended": 1,
-      "code": "26016",
-      "endDate": "2026-03-16",
-      "justification": "formación para profesionalización del area de RRHH",
-      "durationHours": 80,
-      "modality": "online",
+      "isoClause": "7.2 Competencia",
+      "locationOrPlatform": "Presencial / Aula Central Codiagro",
       "subsidyAmount": 248,
-      "totalCost": 248,
-      "provider": "AUDIO GIL FORMACIÓN",
+      "targetCompetencies": [
+        "Auditoría Interna ISO 9001/14001"
+      ],
       "category": "Calidad e ISO",
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "notes": "",
       "evaluationsCount": 1,
-      "targetCompetencies": [
-        "Auditoría Interna ISO 9001/14001"
-      ],
-      "subsidyType": "amount",
       "title": "PLANIFICACION Y GESTION DE RECURSOS HUMANOS",
-      "isoClause": "7.2 Competencia",
-      "id": "act-1788939735339",
-      "netCompanyCost": 0,
+      "plannedDate": "2026-03-16",
       "attendees": [
         {
-          "id": "emp-1788507265026",
-          "department": "Comercial y Asesoramiento Técnico",
-          "email": "marta.roca@codiagro.com",
-          "name": "Marta Roca López"
-        },
-        {
-          "name": "Irene García Clemente",
-          "department": "Comercial y Asesoramiento Técnico",
-          "email": "igarcia@codiagro.com",
-          "id": "emp-1788507763113"
-        },
-        {
-          "email": "jagarcia@codiagro.com",
-          "name": "Juan Antonio García Sánchez",
-          "id": "emp-1788507791866",
-          "department": "Comercial y Asesoramiento Técnico"
-        },
-        {
-          "name": "Ricardo Pérez-Santamarina Ferrer",
-          "email": "rpsf@codiagro.com",
-          "id": "emp-1788507823751",
-          "department": "Comercial y Asesoramiento Técnico"
-        },
-        {
-          "department": "Comercial y Asesoramiento Técnico",
-          "name": "Javier Paredes Martínez",
-          "id": "emp-1788507865439",
-          "email": "jparedes@codiagro.com"
-        },
-        {
-          "department": "Comercial y Asesoramiento Técnico",
-          "id": "emp-1788508141787",
-          "name": "Pedro Javier Medina Bernal",
-          "email": "pjmedina@codiagro.com"
-        }
-      ],
-      "plannedDate": "2026-03-16",
-      "trainerName": "Formador Especialista",
-      "trainingCenter": "AUDIO GIL FORMACIÓN",
-      "subsidyPercentage": 100,
-      "isEffective": true,
-      "attendanceRate": 17,
-      "status": "completed",
-      "createdAt": "2026-09-09T07:42:15.339Z",
-      "isSubsidized": true,
-      "totalParticipantsPlanned": 6,
-      "department": "RRHH"
-    },
-    {
-      "plannedDate": "2026-03-16",
-      "trainerName": "Formador Especialista",
-      "attendanceRate": 100,
-      "subsidyPercentage": 100,
-      "evaluationsCount": 1,
-      "targetCompetencies": [
-        "Auditoría Interna ISO 9001/14001"
-      ],
-      "createdAt": "2026-09-09T07:42:15.897Z",
-      "totalParticipantsAttended": 1,
-      "isoClause": "7.2 Competencia",
-      "netCompanyCost": 0,
-      "locationOrPlatform": "Presencial / Aula Central Codiagro",
-      "trainingCenter": "AUDIO GIL FORMACIÓN",
-      "attendees": [
-        {
+          "evaluationId": "eval-1788940185943",
           "id": "att-1788939780790",
           "email": "alma.trilles@codiagro.com",
-          "name": "Alma Trilles",
-          "evaluationId": "eval-1788940185943",
           "department": "RRHH",
-          "hasCompletedEvaluation": true,
-          "completedAt": "2026-09-09T07:49:47.591Z"
+          "name": "Alma Trilles",
+          "completedAt": "2026-09-09T07:49:47.591Z",
+          "hasCompletedEvaluation": true
         }
       ],
-      "effectivenessScore": 80,
-      "isEffective": true,
-      "totalParticipantsPlanned": 1,
-      "modality": "online",
-      "isSubsidized": true,
+      "attendanceRate": 100,
+      "createdAt": "2026-09-09T07:42:15.897Z",
       "notes": "",
-      "category": "Calidad e ISO",
-      "provider": "AUDIO GIL FORMACIÓN",
-      "averageSatisfaction": 4,
-      "status": "completed",
-      "durationHours": 80,
-      "title": "PLANIFICACION Y GESTION DE RECURSOS HUMANOS",
-      "subsidyAmount": 248,
-      "justification": "formación para profesionalización del area de RRHH",
-      "id": "act-1788939735897",
-      "totalCost": 248,
-      "subsidyType": "amount",
+      "code": "26016",
       "endDate": "2026-03-16",
+      "status": "completed",
+      "netCompanyCost": 0,
+      "totalParticipantsPlanned": 1,
+      "effectivenessScore": 80,
+      "trainingCenter": "AUDIO GIL FORMACIÓN",
+      "isEffective": true,
+      "subsidyType": "amount",
+      "subsidyPercentage": 100,
       "department": "RRHH",
-      "code": "26016"
+      "durationHours": 80,
+      "totalCost": 248,
+      "isSubsidized": true,
+      "justification": "formación para profesionalización del area de RRHH",
+      "totalParticipantsAttended": 1,
+      "provider": "AUDIO GIL FORMACIÓN",
+      "modality": "online",
+      "id": "act-1788939735897",
+      "trainerName": "Formador Especialista"
     }
   ],
   "evaluations": [],
@@ -760,5 +760,5 @@
     "year": 2026
   },
   "initialized": true,
-  "lastUpdated": "2026-09-10T05:23:57.246Z"
+  "lastUpdated": "2026-09-10T05:32:54.995Z"
 }

@@ -386,19 +386,36 @@ async function startServer() {
 
   const sendViaResend = async (apiKey: string, mailOptions: any) => {
     const url = 'https://api.resend.com/emails';
+    
+    // Parse replyTo into valid string or string array
+    let replyToFormatted: any = undefined;
+    if (mailOptions.replyTo) {
+      if (Array.isArray(mailOptions.replyTo)) {
+        replyToFormatted = mailOptions.replyTo;
+      } else if (typeof mailOptions.replyTo === 'string') {
+        const parts = mailOptions.replyTo.split(',').map((s: string) => s.trim()).filter(Boolean);
+        replyToFormatted = parts.length > 1 ? parts : parts[0];
+      }
+    }
+
+    const toFormatted = Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to];
+    const ccFormatted = mailOptions.cc ? (Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc]) : undefined;
+    const bccFormatted = mailOptions.bcc ? (Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc]) : undefined;
+
     const body: any = {
       from: 'CODIAGRO Formación <onboarding@resend.dev>',
-      to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+      to: toFormatted,
       subject: mailOptions.subject,
       html: mailOptions.html,
     };
-    if (mailOptions.cc) body.cc = Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc];
-    if (mailOptions.bcc) body.bcc = Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc];
-    if (mailOptions.replyTo) body.reply_to = mailOptions.replyTo;
+    if (ccFormatted && ccFormatted.length > 0) body.cc = ccFormatted;
+    if (bccFormatted && bccFormatted.length > 0) body.bcc = bccFormatted;
+    if (replyToFormatted) body.reply_to = replyToFormatted;
+
     if (mailOptions.attachments && mailOptions.attachments.length > 0) {
       body.attachments = mailOptions.attachments.map((a: any) => ({
         filename: a.filename || 'adjunto.pdf',
-        content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : a.content
+        content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : (typeof a.content === 'string' ? a.content : '')
       }));
     }
 
@@ -413,7 +430,11 @@ async function startServer() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(`Resend API Error: ${err.message || res.statusText}`);
+      const errMessage = err.message || res.statusText || 'Error desconocido';
+      if (errMessage.includes('testing emails to your own email address') || errMessage.includes('verify a domain')) {
+        throw new Error(`Resend Sandbox: Para enviar correos a destinatarios externos (${toFormatted.join(', ')}), debes añadir y verificar tu dominio empresarial (ej: codiagro.com) en resend.com/domains. Mientras tanto, puedes enviar directamente a formacioncodiagro@gmail.com o usar el botón "Abrir y Enviar con mi Outlook/Gmail"`);
+      }
+      throw new Error(`Resend API: ${errMessage}`);
     }
     return await res.json();
   };

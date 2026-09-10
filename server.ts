@@ -574,11 +574,14 @@ async function startServer() {
         });
       }
 
-      const testRecipients = Array.from(new Set([targetEmail, OUTLOOK_QUALITY_EMAIL].filter(Boolean)));
+      const db = ensureDbFile();
+      const isResend = !!(smtpConfig?.resendApiKey || db?.settings?.resendApiKey || process.env.RESEND_API_KEY);
+      const shouldIncludeCc = !isResend && targetEmail.toLowerCase() !== OUTLOOK_QUALITY_EMAIL.toLowerCase();
+
       await mailSetup.sendEmail({
         from: `"CODIAGRO Formación & Calidad" <${sender}>`,
         to: targetEmail,
-        cc: targetEmail.toLowerCase() !== OUTLOOK_QUALITY_EMAIL.toLowerCase() ? OUTLOOK_QUALITY_EMAIL : undefined,
+        cc: shouldIncludeCc ? OUTLOOK_QUALITY_EMAIL : undefined,
         replyTo: `${GMAIL_SENDER_EMAIL}, ${OUTLOOK_QUALITY_EMAIL}`,
         subject: `✅ [CODIAGRO] Prueba de Envío de Correo - Sistema ISO 9001`,
         html: `

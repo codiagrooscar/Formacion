@@ -281,10 +281,30 @@ export const SingleEvaluationEmailModal: React.FC<SingleEvaluationEmailModalProp
               ) : (
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               )}
-              <div className="space-y-1 text-left flex-1">
+              <div className="space-y-1.5 text-left flex-1">
                 <p className="font-semibold leading-snug">{feedback.message}</p>
                 {feedback.hint && (
-                  <p className="text-[11px] text-slate-300 leading-normal opacity-90">{feedback.hint}</p>
+                  <p className="text-[11px] text-slate-200 leading-normal opacity-95">{feedback.hint}</p>
+                )}
+                {feedback.type === 'error' && (
+                  <div className="pt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenMailto}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Abrir y Enviar con mi Outlook / Gmail</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDownloadPdf}
+                      className="px-3 py-1.5 bg-[#182840] hover:bg-[#203656] text-slate-200 border border-slate-600 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Descargar PDF Adjunto</span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

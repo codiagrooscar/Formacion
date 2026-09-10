@@ -187,6 +187,8 @@ export interface CompanySettings {
   smtpPort?: number; // e.g. 465
   smtpUser?: string; // e.g. 'codiagrooscar@gmail.com'
   smtpPass?: string; // App Password / SMTP Password
+  resendApiKey?: string; // Optional Resend API key for cloud environments (Render Free)
+  brevoApiKey?: string; // Optional Brevo API key for cloud environments (Render Free)
   totalEmployees: number;
   annualTrainingBudget: number;
   targetHoursPerEmployee: number;

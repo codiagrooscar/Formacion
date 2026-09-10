@@ -286,7 +286,7 @@ async function startServer() {
     return new GoogleGenAI({ apiKey });
   };
 
-  // Helper to format SMTP errors with user-friendly Spanish explanations and Google App Password instructions
+  // Helper to format SMTP errors with user-friendly Spanish explanations and Render/Google App Password instructions
   const formatSmtpError = (error: any, sender: string) => {
     const msg = error?.message || String(error);
     if (
@@ -303,11 +303,11 @@ async function startServer() {
         sender
       };
     }
-    if (msg.includes('ETIMEDOUT') || msg.includes('ECONNREFUSED') || msg.includes('timeout')) {
+    if (msg.includes('ETIMEDOUT') || msg.includes('ECONNREFUSED') || msg.includes('timeout') || msg.includes('ESOCKETTIMEDOUT')) {
       return {
-        errorCode: 'CONNECTION_TIMEOUT',
-        error: 'Tiempo de espera agotado al conectar con el servidor de correo. Verifica el Host y el Puerto (465 para SSL o 587 para TLS/STARTTLS).',
-        hint: 'Para Gmail usa smtp.gmail.com puerto 465 (SSL) o 587 (TLS). Para Outlook usa smtp.office365.com puerto 587.',
+        errorCode: 'RENDER_PORT_BLOCKED',
+        error: 'Tiempo de espera agotado (Render.com bloquea los puertos SMTP salientes 465 y 587 en el Plan Gratuito).',
+        hint: '💡 Soluciones disponibles: 1) Pulsa el botón "Abrir Mailto" o "Descargar PDF" para enviar el correo directamente desde tu Outlook/Gmail en 1 clic. 2) O introduce una clave gratuita de API (Resend o Brevo) en Ajustes > Email para enviar vía HTTPS (puerto 443 sin bloqueos). 3) O actualiza el servicio en Render al plan Starter ($7/mes) que desbloquea puertos SMTP.',
         rawError: msg,
         sender
       };
@@ -320,7 +320,7 @@ async function startServer() {
     };
   };
 
-  // Mail Transporter for Gmail / Outlook / Custom SMTP with Strict IPv4 Lookup for Render & Cloud
+  // Mail Transporter for Gmail / Outlook / Custom SMTP and HTTPS Email APIs (Resend/Brevo)
   const OUTLOOK_QUALITY_EMAIL = 'alma.trilles@codiagro.com';
   const GMAIL_SENDER_EMAIL = 'formacioncodiagro@gmail.com';
 
@@ -344,12 +344,106 @@ async function startServer() {
     });
   };
 
-  const getMailTransporter = (customConfig?: { host?: string; port?: number; user?: string; pass?: string }) => {
+  const sendViaBrevo = async (apiKey: string, mailOptions: any) => {
+    const url = 'https://api.brevo.com/v3/smtp/email';
+    const to = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map((e: string) => ({ email: e }));
+    const cc = mailOptions.cc ? (Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc]).map((e: string) => ({ email: e })) : undefined;
+    const bcc = mailOptions.bcc ? (Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc]).map((e: string) => ({ email: e })) : undefined;
+    
+    const body: any = {
+      sender: { name: 'CODIAGRO Formación', email: GMAIL_SENDER_EMAIL },
+      to,
+      subject: mailOptions.subject,
+      htmlContent: mailOptions.html,
+    };
+    if (cc && cc.length > 0) body.cc = cc;
+    if (bcc && bcc.length > 0) body.bcc = bcc;
+    if (mailOptions.replyTo) {
+      body.replyTo = { email: String(mailOptions.replyTo).split(',')[0].trim() };
+    }
+    if (mailOptions.attachments && mailOptions.attachments.length > 0) {
+      body.attachment = mailOptions.attachments.map((a: any) => ({
+        name: a.filename || 'adjunto.pdf',
+        content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : (typeof a.content === 'string' ? a.content : '')
+      }));
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`Brevo API Error: ${err.message || res.statusText}`);
+    }
+    return await res.json();
+  };
+
+  const sendViaResend = async (apiKey: string, mailOptions: any) => {
+    const url = 'https://api.resend.com/emails';
+    const body: any = {
+      from: 'CODIAGRO Formación <onboarding@resend.dev>',
+      to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+    };
+    if (mailOptions.cc) body.cc = Array.isArray(mailOptions.cc) ? mailOptions.cc : [mailOptions.cc];
+    if (mailOptions.bcc) body.bcc = Array.isArray(mailOptions.bcc) ? mailOptions.bcc : [mailOptions.bcc];
+    if (mailOptions.replyTo) body.reply_to = mailOptions.replyTo;
+    if (mailOptions.attachments && mailOptions.attachments.length > 0) {
+      body.attachments = mailOptions.attachments.map((a: any) => ({
+        filename: a.filename || 'adjunto.pdf',
+        content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : a.content
+      }));
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(`Resend API Error: ${err.message || res.statusText}`);
+    }
+    return await res.json();
+  };
+
+  const getMailTransporter = (customConfig?: { host?: string; port?: number; user?: string; pass?: string; resendApiKey?: string; brevoApiKey?: string }) => {
     const db = ensureDbFile();
     const user = (customConfig?.user && customConfig.user.trim() !== '')
       ? customConfig.user.trim()
       : (db?.settings?.smtpUser || process.env.SMTP_USER || GMAIL_SENDER_EMAIL);
     
+    const brevoApiKey = customConfig?.brevoApiKey || db?.settings?.brevoApiKey || process.env.BREVO_API_KEY;
+    const resendApiKey = customConfig?.resendApiKey || db?.settings?.resendApiKey || process.env.RESEND_API_KEY;
+
+    // Check if user or environment has an HTTP REST API Key (100% bypasses Render SMTP port blocks)
+    if (brevoApiKey && brevoApiKey.trim() !== '') {
+      return {
+        transporter: null,
+        sendEmail: async (mailOptions: any) => sendViaBrevo(brevoApiKey.trim(), mailOptions),
+        sender: user
+      };
+    }
+
+    if (resendApiKey && resendApiKey.trim() !== '') {
+      return {
+        transporter: null,
+        sendEmail: async (mailOptions: any) => sendViaResend(resendApiKey.trim(), mailOptions),
+        sender: user
+      };
+    }
+
     const isGmail = user.toLowerCase().endsWith('@gmail.com') || (customConfig?.host && customConfig.host.includes('gmail'));
     const isOutlook = user.toLowerCase().includes('codiagro.com') || (customConfig?.host && customConfig.host.includes('office365'));
     const defaultHost = isOutlook ? 'smtp.office365.com' : 'smtp.gmail.com';
@@ -384,9 +478,9 @@ async function startServer() {
           lookup: ipv4Lookup,
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
-          connectionTimeout: 18000,
-          greetingTimeout: 18000,
-          socketTimeout: 22000,
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 10000,
         } as any);
         return await primaryTransport.sendMail(mailOptions);
       } catch (primaryErr: any) {
@@ -401,9 +495,9 @@ async function startServer() {
           lookup: ipv4Lookup,
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
-          connectionTimeout: 18000,
-          greetingTimeout: 18000,
-          socketTimeout: 22000,
+          connectionTimeout: 8000,
+          greetingTimeout: 8000,
+          socketTimeout: 10000,
         } as any);
         return await fallbackTransport.sendMail(mailOptions);
       }
@@ -417,9 +511,9 @@ async function startServer() {
       lookup: ipv4Lookup,
       auth: { user, pass },
       tls: { rejectUnauthorized: false },
-      connectionTimeout: 18000,
-      greetingTimeout: 18000,
-      socketTimeout: 22000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     } as any);
 
     return {

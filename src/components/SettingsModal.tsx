@@ -1433,6 +1433,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </ol>
                 </div>
 
+                {/* Render Cloud Notice Box */}
+                <div className="bg-[#121c2e] p-3.5 rounded-xl border border-cyan-500/30 text-xs text-slate-300 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-cyan-300">💡 Información para Alojamiento en Render (Plan Free):</p>
+                      <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                        Render.com bloquea los puertos SMTP salientes (465/587) en su plan gratuito. Para enviar correos desde Render dispones de 3 opciones:
+                      </p>
+                      <ul className="list-disc list-inside text-[11px] text-slate-300 mt-1.5 space-y-1">
+                        <li><strong>1. Botón "Abrir Mailto":</strong> Al pulsar enviar justificante, puedes usar el botón <em>Abrir Mailto</em> para enviar el correo pre-redactado directamente desde tu cliente de Outlook/Gmail en 1 clic.</li>
+                        <li><strong>2. API Gratuita HTTPS (Resend / Brevo):</strong> Envía por el puerto 443 HTTPS (nunca se bloquea). Puedes pegar tu clave gratuita abajo.</li>
+                        <li><strong>3. Plan Starter de Render ($7/mes):</strong> Desbloquea de forma inmediata los puertos SMTP 465 y 587 para usar Gmail directamente.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Optional REST API Key for Cloud/Render */}
+                  <div className="pt-2 border-t border-[#1e304d] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Clave API Resend (Opcional - HTTPS Puerto 443)
+                      </label>
+                      <input
+                        type="password"
+                        value={formData.resendApiKey || ''}
+                        onChange={(e) => setFormData({ ...formData, resendApiKey: e.target.value })}
+                        placeholder="re_..."
+                        className="w-full bg-[#0A1220] border border-[#1A2B44] rounded-xl px-2.5 py-1.5 text-slate-200 text-xs font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Clave API Brevo (Opcional - HTTPS Puerto 443)
+                      </label>
+                      <input
+                        type="password"
+                        value={formData.brevoApiKey || ''}
+                        onChange={(e) => setFormData({ ...formData, brevoApiKey: e.target.value })}
+                        placeholder="xkeysib-..."
+                        className="w-full bg-[#0A1220] border border-[#1A2B44] rounded-xl px-2.5 py-1.5 text-slate-200 text-xs font-mono focus:ring-1 focus:ring-cyan-500 focus:outline-hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-[#101C2E] p-3.5 rounded-xl border border-[#1A2B44] space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>

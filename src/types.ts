@@ -24,7 +24,7 @@ export interface TrainingAction {
   id: string;
   code: string;
   title: string;
-  category: 'Tecnología' | 'Calidad e ISO' | 'Prevención y Seguridad' | 'Habilidades y Liderazgo' | 'Operaciones' | 'Idiomas' | 'Comercial y Marketing';
+  category: 'Tecnología' | 'Calidad e ISO' | 'Prevención y Seguridad' | 'Habilidades y Liderazgo' | 'Operaciones' | 'Idiomas' | 'Comercial y Marketing' | string;
   department: string;
   targetCompetencies: string[];
   plannedDate: string;

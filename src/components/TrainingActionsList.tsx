@@ -28,7 +28,10 @@ import {
   Percent,
   Euro,
   HelpCircle,
-  RotateCcw
+  RotateCcw,
+  Building,
+  Layers,
+  Tag
 } from 'lucide-react';
 import { TrainingAction, Evaluation, CompanySettings, TrainingAttendee } from '../types';
 import { generateNextTrainingCode } from '../data/initialData';
@@ -58,6 +61,23 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  // Categories catalog
+  const availableCategories = useMemo(() => {
+    const defaultCats = [
+      'Calidad e ISO',
+      'Tecnología',
+      'Prevención y Seguridad',
+      'Habilidades y Liderazgo',
+      'Operaciones',
+      'Comercial y Marketing',
+      'Idiomas'
+    ];
+    const configured = settings.categories && settings.categories.length > 0 ? settings.categories : defaultCats;
+    const existingFromTrainings = trainings.map((t) => t.category).filter(Boolean) as string[];
+    return Array.from(new Set([...configured, ...existingFromTrainings]));
+  }, [settings.categories, trainings]);
 
   // Modal for New / Edit Course
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -77,7 +97,7 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
     code: '',
     title: '',
     category: 'Calidad e ISO',
-    department: settings.departments[0] || 'Producción e Ingeniería',
+    department: settings.departments[0] || 'Producción e Ingeniería Agronómica',
     targetCompetencies: [settings.competencyCatalog[0] || 'Auditoría Interna ISO 9001/14001'],
     plannedDate: new Date().toISOString().slice(0, 10),
     endDate: '',
@@ -136,20 +156,42 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
     return trainings.filter((t) => {
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (departmentFilter !== 'all' && t.department !== departmentFilter) return false;
+      if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
         const matchTitle = t.title.toLowerCase().includes(query);
         const matchCode = t.code.toLowerCase().includes(query);
         const matchProvider = (t.provider || '').toLowerCase().includes(query);
         const matchTrainer = (t.trainerName || '').toLowerCase().includes(query);
-        return matchTitle || matchCode || matchProvider || matchTrainer;
+        const matchCategory = (t.category || '').toLowerCase().includes(query);
+        const matchDept = (t.department || '').toLowerCase().includes(query);
+        return matchTitle || matchCode || matchProvider || matchTrainer || matchCategory || matchDept;
       }
       return true;
     });
-  }, [trainings, statusFilter, departmentFilter, searchTerm]);
+  }, [trainings, statusFilter, departmentFilter, categoryFilter, searchTerm]);
 
-  // Helper to load attendees automatically from a department
+  // Helper to load ALL company employees
+  const getAllEmployeesAsAttendees = (): TrainingAttendee[] => {
+    const list = settings.employees || [];
+    return list.map((emp) => ({
+      id: emp.id || `att-${Date.now()}-${Math.random()}`,
+      name: emp.name,
+      email: emp.email,
+      department: emp.department || 'General',
+    }));
+  };
+
+  // Helper to load attendees automatically from a department or entire company
   const getEmployeesForDepartment = (deptName: string): TrainingAttendee[] => {
+    if (
+      deptName === 'Toda la empresa' || 
+      deptName === 'Toda la empresa (Plantilla completa)' || 
+      deptName === 'Toda la empresa (Todos los departamentos)' ||
+      deptName === 'General / Toda la empresa'
+    ) {
+      return getAllEmployeesAsAttendees();
+    }
     const list = settings.employees || [];
     return list
       .filter((emp) => emp.department === deptName)
@@ -168,6 +210,16 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
       department: newDept,
       attendees: autoAttendees.length > 0 ? autoAttendees : prev.attendees || [],
       totalParticipantsPlanned: autoAttendees.length > 0 ? autoAttendees.length : Math.max(1, prev.attendees?.length || 1),
+    }));
+  };
+
+  const handleLoadAllCompanyAttendees = () => {
+    const allAtts = getAllEmployeesAsAttendees();
+    setFormData((prev) => ({
+      ...prev,
+      department: prev.department === settings.departments[0] ? 'Toda la empresa' : (prev.department || 'Toda la empresa'),
+      attendees: allAtts,
+      totalParticipantsPlanned: allAtts.length > 0 ? allAtts.length : Math.max(1, prev.attendees?.length || 1),
     }));
   };
 
@@ -263,9 +315,30 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
   // Quick select registered employee
   const handleSelectRegisteredEmployee = (empId: string) => {
     if (!empId) return;
+    if (empId === 'ALL_COMPANY') {
+      handleLoadAllCompanyAttendees();
+      return;
+    }
     const employees = settings.employees || [];
     const emp = employees.find((e) => e.id === empId);
     if (emp) {
+      const alreadyAdded = (formData.attendees || []).some(
+        (a) => a.email.trim().toLowerCase() === emp.email.trim().toLowerCase()
+      );
+      if (!alreadyAdded) {
+        const newAtt: TrainingAttendee = {
+          id: emp.id || `att-${Date.now()}`,
+          name: emp.name,
+          email: emp.email,
+          department: emp.department || formData.department || 'General',
+        };
+        const updated = [...(formData.attendees || []), newAtt];
+        setFormData({
+          ...formData,
+          attendees: updated,
+          totalParticipantsPlanned: updated.length,
+        });
+      }
       setAttendeeNameInput(emp.name);
       setAttendeeEmailInput(emp.email);
     }
@@ -447,7 +520,7 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
         </div>
 
         {/* Search and Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-[#1A2B44]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-4 border-t border-[#1A2B44]">
           {/* Search Input */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -456,7 +529,7 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por curso, código o docente..."
+              placeholder="Buscar curso, código, categoría..."
               className="w-full text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl pl-9 pr-3.5 py-2 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
             />
           </div>
@@ -468,9 +541,23 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
             onChange={(e) => setDepartmentFilter(e.target.value)}
             className="text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
           >
-            <option value="all">Todos los Departamentos</option>
+            <option value="all">🏢 Todos los Departamentos</option>
+            <option value="Toda la empresa">🏢 Toda la empresa</option>
             {settings.departments.map((dept) => (
               <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+
+          {/* Category Filter */}
+          <select
+            id="trainings-filter-category"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+          >
+            <option value="all">🏷️ Todas las Categorías</option>
+            {availableCategories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
 
@@ -481,7 +568,7 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
           >
-            <option value="all">Todos los Estados</option>
+            <option value="all">📊 Todos los Estados</option>
             <option value="completed">Realizado</option>
             <option value="in_progress">En curso</option>
             <option value="planned">Planificado</option>
@@ -497,8 +584,9 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
             <thead className="bg-[#0A1220] border-b border-[#1A2B44] text-slate-400 font-bold uppercase text-[11px] tracking-wider">
               <tr>
                 <th className="py-3 px-4">Código / Curso</th>
+                <th className="py-3 px-3">Categoría & Dpto.</th>
                 <th className="py-3 px-3">Modalidad & Fechas</th>
-                <th className="py-3 px-3">Dpto. & Docente</th>
+                <th className="py-3 px-3">Docente / Proveedor</th>
                 <th className="py-3 px-3 text-center">Horas</th>
                 <th className="py-3 px-3 text-center">Convocados</th>
                 <th className="py-3 px-3 text-center">Coste Neto</th>
@@ -511,7 +599,7 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
             <tbody className="divide-y divide-[#1A2B44]/60">
               {filteredTrainings.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-10 text-slate-400">
+                  <td colSpan={11} className="text-center py-10 text-slate-400">
                     No se encontraron acciones formativas que coincidan con los filtros.
                   </td>
                 </tr>
@@ -547,6 +635,19 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
                         </div>
                       </td>
 
+                      {/* Category & Department */}
+                      <td className="py-3.5 px-3">
+                        <div className="mb-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                            <Tag className="w-2.5 h-2.5" />
+                            {training.category || 'Calidad e ISO'}
+                          </span>
+                        </div>
+                        <div className="text-slate-300 text-xs truncate max-w-[130px]" title={training.department}>
+                          {training.department}
+                        </div>
+                      </td>
+
                       {/* Modality & Dates */}
                       <td className="py-3.5 px-3">
                         <div className="text-slate-200 font-medium text-xs">
@@ -559,13 +660,13 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
                         )}
                       </td>
 
-                      {/* Department & Trainer */}
+                      {/* Trainer & Provider */}
                       <td className="py-3.5 px-3">
-                        <div className="text-slate-200 font-semibold truncate max-w-[130px]" title={training.department}>
-                          {training.department}
+                        <div className="text-slate-200 font-medium text-xs truncate max-w-[130px]">
+                          {training.trainerName || 'Por asignar'}
                         </div>
-                        <div className="text-[11px] text-slate-400 truncate max-w-[130px]">
-                          {training.trainerName || training.provider}
+                        <div className="text-[10px] text-slate-400 truncate max-w-[130px]">
+                          {training.provider || training.trainingCenter || 'Codiagro'}
                         </div>
                       </td>
 
@@ -714,12 +815,20 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
           <div className="bg-[#101C2E] rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-[#1A2B44] max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between border-b border-[#1A2B44] pb-4">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-xs font-bold text-[#00c282] bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded-md">
                     {selectedCourseForDetail.code}
                   </span>
                   <span className="text-xs uppercase font-semibold px-2 py-0.5 rounded bg-[#182840] text-slate-300">
                     Modalidad: {selectedCourseForDetail.modality || 'Presencial'}
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    {selectedCourseForDetail.category || 'Calidad e ISO'}
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-[#182840] text-slate-300 border border-[#243a5e] flex items-center gap-1">
+                    <Building className="w-3 h-3 text-slate-400" />
+                    {selectedCourseForDetail.department}
                   </span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-bold text-white mt-1.5">
@@ -1036,8 +1145,31 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
                     onChange={(e) => handleDepartmentChange(e.target.value)}
                     className="w-full text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                   >
+                    <option value="Toda la empresa">🏢 Toda la empresa (Plantilla completa)</option>
                     {settings.departments.map((d) => (
                       <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Training Category */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-blue-400" />
+                      Categoría de Acción Formativa *
+                    </label>
+                    <span className="text-[10px] text-blue-400 font-medium">
+                      (Para estudios y estadísticas)
+                    </span>
+                  </div>
+                  <select
+                    value={formData.category || availableCategories[0] || 'Calidad e ISO'}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full text-xs sm:text-sm bg-[#0A1220] border border-[#1A2B44] rounded-xl px-3 py-2 text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden font-medium"
+                  >
+                    {availableCategories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
@@ -1368,12 +1500,48 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
 
               {/* SECTION: Convocados / Attendees List (Name + Email) */}
               <div className="p-4 bg-[#0A1220] rounded-2xl border border-[#1A2B44] space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#00c282]" />
                     <span className="text-xs font-bold text-white uppercase tracking-wider">
                       Alumnos Convocados ({formData.attendees?.length || 0})
                     </span>
+                  </div>
+
+                  {/* Quick Action Buttons for Attendance */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      id="btn-load-all-company"
+                      onClick={handleLoadAllCompanyAttendees}
+                      className="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/25 text-[#00c282] border border-emerald-500/30 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+                      title="Cargar a todos los empleados de la empresa como convocados"
+                    >
+                      <Building className="w-3.5 h-3.5" />
+                      Toda la Empresa ({(settings.employees || []).length})
+                    </button>
+                    <button
+                      type="button"
+                      id="btn-reload-dept-attendees"
+                      onClick={() => handleDepartmentChange(formData.department || settings.departments[0])}
+                      className="px-2.5 py-1 bg-[#101C2E] hover:bg-[#182840] text-slate-300 border border-[#1A2B44] rounded-lg text-xs font-medium flex items-center gap-1 transition"
+                      title="Recargar alumnos del departamento seleccionado"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Cargar Dpto.
+                    </button>
+                    {(formData.attendees || []).length > 0 && (
+                      <button
+                        type="button"
+                        id="btn-clear-attendees"
+                        onClick={() => setFormData({ ...formData, attendees: [], totalParticipantsPlanned: 1 })}
+                        className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-lg text-xs font-medium flex items-center gap-1 transition"
+                        title="Vaciar lista de convocados"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Vaciar
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1388,6 +1556,9 @@ export const TrainingActionsList: React.FC<TrainingActionsListProps> = ({
                     className="flex-1 bg-[#0A1220] border border-[#1A2B44] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
                   >
                     <option value="">-- Seleccionar alumno de la plantilla registrada --</option>
+                    <option value="ALL_COMPANY" className="text-emerald-400 font-bold bg-[#14233a]">
+                      🏢 ➕ CONVOCAR A TODA LA EMPRESA ({(settings.employees || []).length} empleados)
+                    </option>
                     {(settings.employees || []).map((emp) => (
                       <option key={emp.id} value={emp.id}>
                         {emp.name} ({emp.department || 'Sin Dpto.'}) - {emp.email}
